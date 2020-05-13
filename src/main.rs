@@ -2,6 +2,8 @@ use std::io::prelude::*;
 use std::fs::File;
 use std::fmt;
 
+mod geom;
+
 #[derive(Default, Clone)]
 pub struct Color {
   r: u8,
@@ -10,8 +12,8 @@ pub struct Color {
 }
 
 impl Color {
-  fn new() -> Color {
-    Color { r: 0, g: 0, b: 0 }
+  fn new(r: u8, g: u8, b: u8) -> Color {
+    Color { r, g, b }
   }
 }
 
@@ -28,7 +30,7 @@ fn main() -> std::io::Result<()> {
   file.write(b"P3\n")?;
   file.write(format!("{} {}\n", &WIDTH, &HEIGHT).as_bytes())?;
   file.write(b"255\n")?;
-  let mat = vec![vec![Color::new(); WIDTH]; HEIGHT];
+  let mat = vec![vec![Color::new(0, 0, 0); WIDTH]; HEIGHT];
   for i in 0..HEIGHT {
     for j in 0..WIDTH {
       file.write(format!("{}\t", mat[i][j]).as_bytes())?;
