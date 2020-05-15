@@ -3,6 +3,7 @@ use std::fs::File;
 use std::fmt;
 
 mod geom;
+mod scene;
 
 #[derive(Default, Clone)]
 pub struct Color {
@@ -12,8 +13,8 @@ pub struct Color {
 }
 
 impl Color {
-  fn new(r: u8, g: u8, b: u8) -> Color {
-    Color { r, g, b }
+  fn new() -> Color {
+    Color { r: 0, g: 0, b: 0 }
   }
 }
 
@@ -26,11 +27,12 @@ impl fmt::Display for Color {
 fn main() -> std::io::Result<()> {
   const WIDTH: usize = 800;
   const HEIGHT: usize = 600;
+  const Z_DISTANCE: f64 = 10_f64;
   let mut file = File::create("hello.ppm")?;
   file.write(b"P3\n")?;
   file.write(format!("{} {}\n", &WIDTH, &HEIGHT).as_bytes())?;
   file.write(b"255\n")?;
-  let mat = vec![vec![Color::new(0, 0, 0); WIDTH]; HEIGHT];
+  let mat = vec![vec![Color::new(); WIDTH]; HEIGHT];
   for i in 0..HEIGHT {
     for j in 0..WIDTH {
       file.write(format!("{}\t", mat[i][j]).as_bytes())?;

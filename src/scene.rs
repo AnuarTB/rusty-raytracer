@@ -1,6 +1,14 @@
+use crate::geom;
+
 pub struct Sphere {
-  radius: f64,
-  center: geom::Vec3
+  pub radius: f64,
+  pub center: geom::Vec3
+}
+
+impl Sphere {
+  pub fn new() -> Self {
+    Sphere { radius: 0.0, center: geom::Vec3::new() }
+  }
 }
 
 pub trait SceneObject {
