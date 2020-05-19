@@ -45,7 +45,7 @@ impl Vec3 {
 
   /// Returns a squared length of the vector
   pub fn len2(&self) -> f64 {
-    (self.x * self.x + self.y * self.y + self.z * self.z)
+    self.x * self.x + self.y * self.y + self.z * self.z
   }
 
   pub fn len(&self) -> f64 {
