@@ -1,6 +1,6 @@
 // TODO(@anuatb): probably not the best way to import?
 use crate::geom::*;
-use crate::Color;
+use crate::rendering::Color;
 
 #[derive(Debug)]
 pub struct Sphere {
