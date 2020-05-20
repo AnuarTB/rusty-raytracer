@@ -3,6 +3,17 @@ use crate::geom::*;
 use crate::rendering::Color;
 
 #[derive(Debug)]
+pub struct Hit {
+  pub normal: Vec3,
+  pub t: f64,
+}
+
+pub trait Hittable {
+  // Return Hit object if the object was hitted by ray.
+  fn hit(&self, ray: Ray) -> Option<Hit>;
+}
+
+#[derive(Debug)]
 pub struct Sphere {
   pub radius: f64,
   pub center: Vec3,
@@ -16,13 +27,15 @@ impl Sphere {
       center: Vec3::new(),
       color: Color::new(),
     }
-  }
+  }  
+}
 
-  pub fn intersect(&self, orig: Vec3, ray: Vec3) -> Option<f64> {
+impl Hittable for Sphere {
+  fn hit(&self, ray: Ray) -> Option<Hit> {
     // Coefficients of quadratic equation
-    let a = ray.len2();
-    let b = 2.0 * Vec3::dot(orig - self.center, ray);
-    let c = (orig - self.center).len2() - self.radius * self.radius;
+    let a = ray.dir.len2();
+    let b = 2.0 * Vec3::dot(ray.orig - self.center, ray.dir);
+    let c = (ray.orig - self.center).len2() - self.radius * self.radius;
 
     // Computing discriminant
     let d = b * b - 4.0 * a * c;
@@ -31,7 +44,11 @@ impl Sphere {
     } else {
       let x1 = (-b + d.sqrt()) / (2.0 * a);
       let x2 = (-b - d.sqrt()) / (2.0 * a);
-      Some(x1.min(x2))
+      
+      let t = x1.min(x2);
+      let normal = ray.at(t) - self.center;
+      
+      Some(Hit { normal, t })
     }
   }
 }

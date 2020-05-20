@@ -107,6 +107,18 @@ impl Mul<f64> for Vec3 {
   }
 }
 
+#[derive(Debug, Copy, Clone)]
+pub struct Ray {
+  pub orig: Vec3,
+  pub dir: Vec3,
+}
+
+impl Ray {
+  pub fn at(&self, t: f64) -> Vec3 {
+    self.orig + self.dir * t
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

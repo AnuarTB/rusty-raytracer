@@ -1,24 +1,23 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-use geom::Vec3;
+use geom::{ Vec3, Ray };
 use rendering::Color;
-use scene::Sphere;
+use scene::{ Sphere, Hittable };
 
 mod geom;
 mod rendering;
 mod scene;
 
-fn cast_ray(orig: Vec3, ray: Vec3, objects: &Vec<Sphere>) -> Color {
+fn cast_ray(ray: Ray, objects: &Vec<Sphere>) -> Color {
   let mut nearest_dist: f64 = f64::INFINITY;
   let mut color_ret = Color { r: 255, g: 255, b: 255 };
   for object in objects {
-    let hit = object.intersect(orig, ray);
-    match hit {
+    match object.hit(ray) {
       None => continue,
-      Some(hit_t) => {
-        if geom::fcmp::smlr(hit_t, nearest_dist) {
-          nearest_dist = hit_t;
+      Some(hit) => {
+        if geom::fcmp::smlr(hit.t, nearest_dist) {
+          nearest_dist = hit.t;
           color_ret = object.color;
         }
       }
@@ -60,8 +59,8 @@ fn main() -> std::io::Result<()> {
       let width_f = WIDTH as f64;
       let y: f64 = (-(i as f64) + height_f / 2.0) / height_f;
       let x: f64 = (j as f64 - width_f / 2.0) / width_f;
-      let ray = (Vec3 { x, y, z: 1.0 }).norm();
-      mat[i][j] = cast_ray(origin, ray, &objects);
+      let dir = (Vec3 { x, y, z: 1.0 }).norm();
+      mat[i][j] = cast_ray(Ray { orig: origin, dir }, &objects);
       file.write(format!("{}\t", mat[i][j]).as_bytes())?;
     }
     file.write(b"\n")?;
