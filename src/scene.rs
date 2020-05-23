@@ -46,9 +46,14 @@ impl Hittable for Sphere {
       let x2 = (-b - d.sqrt()) / (2.0 * a);
       
       let t = x1.min(x2);
-      let normal = ray.at(t) - self.center;
+      let normal = (ray.at(t) - self.center).norm();
       
       Some(Hit { normal, t })
     }
   }
+}
+
+pub struct Light {
+  pub intensity: f64,
+  pub pos: Vec3,
 }
