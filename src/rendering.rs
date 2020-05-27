@@ -38,9 +38,6 @@ mod tests {
 
   #[test]
   fn test_mul_color() {
-    assert_eq!(
-      Color { r: 1, g: 100, b: 30 } * 3.0,
-      Color { r: 3, g: 255, b: 90 }
-    );
+    assert_eq!(Color { r: 1, g: 100, b: 30 } * 3.0, Color { r: 3, g: 255, b: 90 });
   }
 }

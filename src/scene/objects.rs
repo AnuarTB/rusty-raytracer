@@ -2,9 +2,10 @@
 use crate::geom::*;
 use crate::rendering::Color;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct Hit {
   pub normal: Vec3,
+  pub loc: Vec3,
   pub t: f64,
 }
 
@@ -27,7 +28,7 @@ impl Sphere {
       center: Vec3::new(),
       color: Color::new(),
     }
-  }  
+  }
 }
 
 impl Hittable for Sphere {
@@ -44,16 +45,12 @@ impl Hittable for Sphere {
     } else {
       let x1 = (-b + d.sqrt()) / (2.0 * a);
       let x2 = (-b - d.sqrt()) / (2.0 * a);
-      
+
       let t = x1.min(x2);
       let normal = (ray.at(t) - self.center).norm();
-      
-      Some(Hit { normal, t })
+      let loc = ray.at(t);
+
+      Some(Hit { normal, loc, t })
     }
   }
-}
-
-pub struct Light {
-  pub intensity: f64,
-  pub pos: Vec3,
 }

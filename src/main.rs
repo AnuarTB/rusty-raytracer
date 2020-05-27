@@ -1,16 +1,21 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-use geom::{ Vec3, Ray };
+use geom::{Ray, Vec3};
 use rendering::Color;
-use scene::{ Sphere, Hit, Hittable, Light };
+use scene::lights::*;
+use scene::objects::{Hit, Hittable, Sphere};
 
 mod geom;
 mod rendering;
 mod scene;
 
-fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
-  let mut nearest = Hit { normal: Vec3::new(), t: f64::INFINITY };
+fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<&dyn Light>) -> Color {
+  let mut nearest = Hit {
+    normal: Vec3::new(),
+    loc: Vec3::new(),
+    t: f64::INFINITY,
+  };
   let mut color_ret = Color { r: 255, g: 255, b: 255 };
   for object in objects {
     match object.hit(ray) {
@@ -24,11 +29,9 @@ fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
     }
   }
   if nearest.t != f64::INFINITY {
-    let hit_point = ray.at(nearest.t);
-    let mut total_intensity = 0.3;
+    let mut total_intensity = 0.0;
     for light in lights {
-      let l = (hit_point - light.pos).norm();
-      total_intensity += light.intensity * (Vec3::dot(l, nearest.normal).max(0.0));  
+      total_intensity += light.calculate_intensity(nearest);
     }
     color_ret = color_ret * total_intensity;
   }
@@ -42,31 +45,33 @@ fn main() -> std::io::Result<()> {
 
   let mut mat = vec![vec![Color::new(); WIDTH]; HEIGHT];
   let mut objects = Vec::new();
-  let mut lights = Vec::new();
+  let mut lights: Vec<&dyn Light> = Vec::new();
   let origin = Vec3::new();
 
   // Scene setup
   objects.push(Sphere {
     radius: 1.0,
-    center: Vec3 { x: 0.0, y: 0.0, z: 3.0 },
-    color: Color { r: 255, g: 0, b: 0 },
+    center: Vec3 { x: -1.0, y: 0.0, z: 4.0 },
+    color: Color { r: 210, g: 0, b: 0 },
   });
 
   objects.push(Sphere {
     radius: 1.0,
-    center: Vec3 { x: 1.0, y: 1.0, z: 4.0 },
-    color: Color { r: 255, g: 255, b: 0 },
+    center: Vec3 { x: 1.0, y: 1.0, z: 5.0 },
+    color: Color { r: 190, g: 255, b: 0 },
   });
 
-  lights.push(Light {
-    intensity: 0.5,
+  lights.push(&PointLight {
+    intensity: 1.0,
     pos: Vec3 { x: 0.0, y: -1.0, z: 4.0 },
   });
 
-  lights.push(Light {
-    intensity: 0.4,
-    pos: Vec3 { x: 1.0, y: 2.0, z: 2.0 },
+  lights.push(&DirectionalLight {
+    intensity: 0.5,
+    dir: Vec3 { x: -2.0, y: 0.0, z: 1.0 },
   });
+
+  lights.push(&AmbientLight { intensity: 0.2 });
 
   let mut file = File::create("hello.ppm")?;
   file.write(b"P3\n")?;

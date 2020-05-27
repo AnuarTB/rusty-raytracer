@@ -168,11 +168,7 @@ mod tests {
   fn test_cross() {
     assert_eq!(
       Vec3::cross(Vec3 { x: 1.0, y: 2.0, z: 3.0 }, Vec3 { x: 4.0, y: 5.0, z: 6.0 }),
-      Vec3 {
-        x: -3.0,
-        y: 6.0,
-        z: -3.0
-      }
+      Vec3 { x: -3.0, y: 6.0, z: -3.0 }
     )
   }
 }
