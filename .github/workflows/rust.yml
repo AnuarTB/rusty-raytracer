@@ -7,9 +7,15 @@ on:
     branches: [ master, dev ]
 
 jobs:
-  build:
-
+  ci:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        rust:
+          - stable
+          - beta
+          - nightly
+          - 1.31.0
 
     steps:
     - uses: actions/checkout@v2
