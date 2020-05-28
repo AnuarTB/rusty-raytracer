@@ -1,5 +1,5 @@
 [package]
-name = "lumen"
+name = "rusty-raytracer"
 version = "0.1.0"
 authors = ["Anuar Talipov <anuartb@gmail.com>"]
 edition = "2018"
