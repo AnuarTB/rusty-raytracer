@@ -1,6 +1,6 @@
 // TODO(@anuatb): probably not the best way to import?
 use crate::geom::*;
-use crate::rendering::Color;
+use crate::rendering::Material;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Hit {
@@ -18,7 +18,7 @@ pub trait Hittable {
 pub struct Sphere {
   pub radius: f64,
   pub center: Vec3,
-  pub color: Color,
+  pub material: Material,
 }
 
 impl Sphere {
@@ -26,7 +26,7 @@ impl Sphere {
     Sphere {
       radius: 0.0,
       center: Vec3::new(),
-      color: Color::new(),
+      material: Material::new(),
     }
   }
 }

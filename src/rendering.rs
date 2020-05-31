@@ -32,6 +32,25 @@ impl Mul<f64> for Color {
   }
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct Material {
+  pub color: Color,
+  pub diffuse_coeff: f64,
+  pub specular_coeff: f64,
+  pub exp: f64,
+}
+
+impl Material {
+  pub fn new() -> Self {
+    Material {
+      color: Color::new(),
+      diffuse_coeff: 0.0,
+      specular_coeff: 0.0,
+      exp: 0.0,
+    }
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;

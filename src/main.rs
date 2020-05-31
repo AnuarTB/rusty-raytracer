@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use geom::{Ray, Vec3};
-use rendering::Color;
+use rendering::{Color, Material};
 use scene::lights::*;
 use scene::objects::{Hit, Hittable, Sphere};
 
@@ -14,24 +14,28 @@ fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<&dyn Light>) -> Color 
   let mut nearest = Hit {
     normal: Vec3::new(),
     loc: Vec3::new(),
-    t: f64::INFINITY,
+    t: std::f64::INFINITY,
   };
   let mut color_ret = Color { r: 255, g: 255, b: 255 };
+  let mut material = Material::new();
+
   for object in objects {
     match object.hit(ray) {
       None => continue,
       Some(hit) => {
         if geom::fcmp::smlr(hit.t, nearest.t) {
           nearest = hit;
-          color_ret = object.color;
+          color_ret = object.material.color;
+          material = object.material;
         }
       }
     }
   }
-  if nearest.t != f64::INFINITY {
+
+  if nearest.t != std::f64::INFINITY {
     let mut total_intensity = 0.0;
     for light in lights {
-      total_intensity += light.calculate_intensity(nearest);
+      total_intensity += light.total_reflection(material, nearest);
     }
     color_ret = color_ret * total_intensity;
   }
@@ -52,13 +56,23 @@ fn main() -> std::io::Result<()> {
   objects.push(Sphere {
     radius: 1.0,
     center: Vec3 { x: -1.0, y: 0.0, z: 4.0 },
-    color: Color { r: 210, g: 0, b: 0 },
+    material: Material {
+      color: Color { r: 210, g: 0, b: 0 },
+      diffuse_coeff: 0.6,
+      specular_coeff: 0.5,
+      exp: 15.0,
+    },
   });
 
   objects.push(Sphere {
     radius: 1.0,
     center: Vec3 { x: 1.0, y: 1.0, z: 5.0 },
-    color: Color { r: 190, g: 255, b: 0 },
+    material: Material {
+      color: Color { r: 190, g: 255, b: 0 },
+      diffuse_coeff: 0.7,
+      specular_coeff: 0.2,
+      exp: 5.0,
+    },
   });
 
   lights.push(&PointLight {
