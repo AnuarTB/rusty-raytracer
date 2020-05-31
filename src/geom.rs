@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Neg, Sub};
 
 #[derive(Debug, PartialOrd, Copy, Clone)]
 pub struct Vec3 {
@@ -107,6 +107,30 @@ impl Mul<f64> for Vec3 {
   }
 }
 
+impl Mul<Vec3> for f64 {
+  type Output = Vec3;
+
+  fn mul(self, vec: Vec3) -> Vec3 {
+    Vec3 {
+      x: self * vec.x,
+      y: self * vec.y,
+      z: self * vec.z,
+    }
+  }
+}
+
+impl Neg for Vec3 {
+  type Output = Self;
+
+  fn neg(self) -> Self {
+    Self {
+      x: -self.x,
+      y: -self.y,
+      z: -self.z,
+    }
+  }
+}
+
 #[derive(Debug, Copy, Clone)]
 pub struct Ray {
   pub orig: Vec3,
@@ -122,6 +146,11 @@ impl Ray {
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn test_neg() {
+    assert_eq!(-Vec3 { x: 1.0, y: 2.0, z: 3.0 }, Vec3 { x: -1.0, y: -2.0, z: -3.0 });
+  }
 
   #[test]
   fn test_add() {
@@ -142,6 +171,7 @@ mod tests {
   #[test]
   fn test_mul_scalar() {
     assert_eq!(Vec3 { x: 1.0, y: 2.0, z: 3.0 } * 2.0, Vec3 { x: 2.0, y: 4.0, z: 6.0 });
+    assert_eq!(2.0 * Vec3 { x: 1.0, y: 2.0, z: 3.0 }, Vec3 { x: 2.0, y: 4.0, z: 6.0 });
   }
 
   #[test]
