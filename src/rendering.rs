@@ -1,22 +1,19 @@
 use std::fmt;
 use std::ops::Mul;
+use crate::geom::Vec3;
 
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
-pub struct Color {
-  pub r: u8,
-  pub g: u8,
-  pub b: u8,
-}
+
+pub type Color = Vec3<u8>;
 
 impl Color {
   pub fn new() -> Color {
-    Color { r: 0, g: 0, b: 0 }
+    Color { x: 0, y: 0, z: 0 }
   }
 }
 
 impl fmt::Display for Color {
   fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{} {} {}", self.r, self.g, self.b)
+    write!(f, "{} {} {}", self.x, self.y, self.z)
   }
 }
 
@@ -25,9 +22,9 @@ impl Mul<f64> for Color {
 
   fn mul(self, scalar: f64) -> Self {
     Self {
-      r: (self.r as f64 * scalar).min(255.0).max(0.0) as u8,
-      g: (self.g as f64 * scalar).min(255.0).max(0.0) as u8,
-      b: (self.b as f64 * scalar).min(255.0).max(0.0) as u8,
+      x: (self.x as f64 * scalar).min(255.0).max(0.0) as u8,
+      y: (self.y as f64 * scalar).min(255.0).max(0.0) as u8,
+      z: (self.z as f64 * scalar).min(255.0).max(0.0) as u8,
     }
   }
 }
@@ -57,6 +54,6 @@ mod tests {
 
   #[test]
   fn test_mul_color() {
-    assert_eq!(Color { r: 1, g: 100, b: 30 } * 3.0, Color { r: 3, g: 255, b: 90 });
+    assert_eq!(Color { x: 1, y: 100, z: 30 } * 3.0, Color { x: 3, y: 255, z: 90 });
   }
 }

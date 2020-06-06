@@ -4,8 +4,8 @@ use crate::rendering::Material;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Hit {
-  pub normal: Vec3,
-  pub loc: Vec3,
+  pub normal: Vec3f,
+  pub loc: Vec3f,
   pub t: f64,
 }
 
@@ -17,7 +17,7 @@ pub trait Hittable {
 #[derive(Debug)]
 pub struct Sphere {
   pub radius: f64,
-  pub center: Vec3,
+  pub center: Vec3f,
   pub material: Material,
 }
 
@@ -25,7 +25,7 @@ impl Sphere {
   pub fn new() -> Self {
     Sphere {
       radius: 0.0,
-      center: Vec3::new(),
+      center: Vec3f::new(),
       material: Material::new(),
     }
   }
@@ -35,7 +35,7 @@ impl Hittable for Sphere {
   fn hit(&self, ray: Ray) -> Option<Hit> {
     // Coefficients of quadratic equation
     let a = ray.dir.len2();
-    let b = 2.0 * Vec3::dot(ray.orig - self.center, ray.dir);
+    let b = 2.0 * Vec3f::dot(ray.orig - self.center, ray.dir);
     let c = (ray.orig - self.center).len2() - self.radius * self.radius;
 
     // Computing discriminant

@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::prelude::*;
 
-use geom::{Ray, Vec3};
+use geom::{Ray, Vec3f};
 use rendering::{Color, Material};
 use scene::lights::*;
 use scene::objects::{Hit, Hittable, Sphere};
@@ -12,11 +12,11 @@ mod scene;
 
 fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<&dyn Light>) -> Color {
   let mut nearest = Hit {
-    normal: Vec3::new(),
-    loc: Vec3::new(),
+    normal: Vec3f::new(),
+    loc: Vec3f::new(),
     t: std::f64::INFINITY,
   };
-  let mut color_ret = Color { r: 255, g: 255, b: 255 };
+  let mut color_ret = Color { x: 255, y: 255, z: 255 };
   let mut material = Material::new();
 
   for object in objects {
@@ -50,14 +50,14 @@ fn main() -> std::io::Result<()> {
   let mut mat = vec![vec![Color::new(); WIDTH]; HEIGHT];
   let mut objects = Vec::new();
   let mut lights: Vec<&dyn Light> = Vec::new();
-  let origin = Vec3::new();
+  let origin = Vec3f::new();
 
   // Scene setup
   objects.push(Sphere {
     radius: 1.0,
-    center: Vec3 { x: -1.0, y: 0.0, z: 4.0 },
+    center: Vec3f { x: -1.0, y: 0.0, z: 4.0 },
     material: Material {
-      color: Color { r: 210, g: 0, b: 0 },
+      color: Color { x: 210, y: 0, z: 0 },
       diffuse_coeff: 0.6,
       specular_coeff: 0.5,
       exp: 15.0,
@@ -66,9 +66,9 @@ fn main() -> std::io::Result<()> {
 
   objects.push(Sphere {
     radius: 1.0,
-    center: Vec3 { x: 1.0, y: 1.0, z: 5.0 },
+    center: Vec3f { x: 1.0, y: 1.0, z: 5.0 },
     material: Material {
-      color: Color { r: 190, g: 255, b: 0 },
+      color: Color { x: 190, y: 255, z: 0 },
       diffuse_coeff: 0.7,
       specular_coeff: 0.2,
       exp: 5.0,
@@ -77,12 +77,12 @@ fn main() -> std::io::Result<()> {
 
   lights.push(&PointLight {
     intensity: 1.0,
-    pos: Vec3 { x: 0.0, y: -1.0, z: 4.0 },
+    pos: Vec3f { x: 0.0, y: -1.0, z: 4.0 },
   });
 
   lights.push(&DirectionalLight {
     intensity: 0.5,
-    dir: Vec3 { x: -2.0, y: 0.0, z: 1.0 },
+    dir: Vec3f { x: -2.0, y: 0.0, z: 1.0 },
   });
 
   lights.push(&AmbientLight { intensity: 0.2 });
@@ -98,7 +98,7 @@ fn main() -> std::io::Result<()> {
       let width_f = WIDTH as f64;
       let y: f64 = (-(i as f64) + height_f / 2.0) / height_f;
       let x: f64 = (j as f64 - width_f / 2.0) / width_f;
-      let dir = (Vec3 { x, y, z: 1.0 }).norm();
+      let dir = (Vec3f { x, y, z: 1.0 }).norm();
       mat[i][j] = cast_ray(Ray { orig: origin, dir }, &objects, &lights);
       file.write(format!("{}\t", mat[i][j]).as_bytes())?;
     }

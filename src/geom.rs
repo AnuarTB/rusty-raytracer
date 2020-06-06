@@ -1,11 +1,13 @@
 use std::ops::{Add, Mul, Neg, Sub};
 
-#[derive(Debug, PartialOrd, Copy, Clone)]
-pub struct Vec3 {
-  pub x: f64,
-  pub y: f64,
-  pub z: f64,
+#[derive(Debug, Copy, Clone)]
+pub struct Vec3<T> {
+  pub x: T,
+  pub y: T,
+  pub z: T,
 }
+
+pub type Vec3f = Vec3<f64>;
 
 pub mod fcmp {
   const EPS: f64 = 1e-12;
@@ -26,17 +28,17 @@ pub mod fcmp {
   }
 }
 
-impl Vec3 {
+impl Vec3f {
   pub fn new() -> Self {
-    Vec3 { x: 0.0, y: 0.0, z: 0.0 }
+    Vec3f { x: 0.0, y: 0.0, z: 0.0 }
   }
 
-  pub fn dot(a: Vec3, b: Vec3) -> f64 {
+  pub fn dot(a: Vec3f, b: Vec3f) -> f64 {
     a.x * b.x + a.y * b.y + a.z * b.z
   }
 
-  pub fn cross(a: Vec3, b: Vec3) -> Vec3 {
-    Vec3 {
+  pub fn cross(a: Vec3f, b: Vec3f) -> Vec3f {
+    Vec3f {
       x: a.y * b.z - a.z * b.y,
       y: a.z * b.x - a.x * b.z,
       z: a.x * b.y - a.y * b.x,
@@ -55,7 +57,7 @@ impl Vec3 {
   /// Returns new normalized version of the vector
   pub fn norm(&self) -> Self {
     let len: f64 = self.len();
-    Vec3 {
+    Vec3f {
       x: self.x / len,
       y: self.y / len,
       z: self.z / len,
@@ -65,16 +67,16 @@ impl Vec3 {
 
 // ! This is not accurate comparison of floating
 // ! point numbers.
-impl PartialEq for Vec3 {
+impl PartialEq for Vec3f {
   fn eq(&self, other: &Self) -> bool {
     fcmp::eql(self.x, other.x) && fcmp::eql(self.y, other.y) && fcmp::eql(self.z, other.z)
   }
 }
 
-impl Add for Vec3 {
+impl<T: Add<Output = T>> Add for Vec3<T> {
   type Output = Self;
 
-  fn add(self, other: Self) -> Self {
+  fn add(self, other: Self) -> Self::Output {
     Self {
       x: self.x + other.x,
       y: self.y + other.y,
@@ -83,10 +85,11 @@ impl Add for Vec3 {
   }
 }
 
-impl Sub for Vec3 {
+impl<T: Sub<Output = T>> Sub for Vec3<T>
+{
   type Output = Self;
 
-  fn sub(self, other: Self) -> Self {
+  fn sub(self, other: Self) -> Self::Output {
     Self {
       x: self.x - other.x,
       y: self.y - other.y,
@@ -95,7 +98,7 @@ impl Sub for Vec3 {
   }
 }
 
-impl Mul<f64> for Vec3 {
+impl Mul<f64> for Vec3f {
   type Output = Self;
 
   fn mul(self, scalar: f64) -> Self {
@@ -107,11 +110,11 @@ impl Mul<f64> for Vec3 {
   }
 }
 
-impl Mul<Vec3> for f64 {
-  type Output = Vec3;
+impl Mul<Vec3f> for f64 {
+  type Output = Vec3f;
 
-  fn mul(self, vec: Vec3) -> Vec3 {
-    Vec3 {
+  fn mul(self, vec: Vec3f) -> Vec3f {
+    Vec3f {
       x: self * vec.x,
       y: self * vec.y,
       z: self * vec.z,
@@ -119,7 +122,7 @@ impl Mul<Vec3> for f64 {
   }
 }
 
-impl Neg for Vec3 {
+impl Neg for Vec3f {
   type Output = Self;
 
   fn neg(self) -> Self {
@@ -133,12 +136,12 @@ impl Neg for Vec3 {
 
 #[derive(Debug, Copy, Clone)]
 pub struct Ray {
-  pub orig: Vec3,
-  pub dir: Vec3,
+  pub orig: Vec3f,
+  pub dir: Vec3f,
 }
 
 impl Ray {
-  pub fn at(&self, t: f64) -> Vec3 {
+  pub fn at(&self, t: f64) -> Vec3f {
     self.orig + self.dir * t
   }
 }
@@ -149,47 +152,47 @@ mod tests {
 
   #[test]
   fn test_neg() {
-    assert_eq!(-Vec3 { x: 1.0, y: 2.0, z: 3.0 }, Vec3 { x: -1.0, y: -2.0, z: -3.0 });
+    assert_eq!(-Vec3f { x: 1.0, y: 2.0, z: 3.0 }, Vec3f { x: -1.0, y: -2.0, z: -3.0 });
   }
 
   #[test]
   fn test_add() {
     assert_eq!(
-      Vec3 { x: 1.0, y: 2.0, z: 3.0 } + Vec3 { x: 4.0, y: 5.0, z: 6.0 },
-      Vec3 { x: 5.0, y: 7.0, z: 9.0 }
+      Vec3f { x: 1.0, y: 2.0, z: 3.0 } + Vec3f { x: 4.0, y: 5.0, z: 6.0 },
+      Vec3f { x: 5.0, y: 7.0, z: 9.0 }
     );
   }
 
   #[test]
   fn test_sub() {
     assert_eq!(
-      Vec3 { x: 6.0, y: 5.0, z: 4.0 } - Vec3 { x: 1.0, y: 2.0, z: 3.0 },
-      Vec3 { x: 5.0, y: 3.0, z: 1.0 }
+      Vec3f { x: 6.0, y: 5.0, z: 4.0 } - Vec3f { x: 1.0, y: 2.0, z: 3.0 },
+      Vec3f { x: 5.0, y: 3.0, z: 1.0 }
     );
   }
 
   #[test]
   fn test_mul_scalar() {
-    assert_eq!(Vec3 { x: 1.0, y: 2.0, z: 3.0 } * 2.0, Vec3 { x: 2.0, y: 4.0, z: 6.0 });
-    assert_eq!(2.0 * Vec3 { x: 1.0, y: 2.0, z: 3.0 }, Vec3 { x: 2.0, y: 4.0, z: 6.0 });
+    assert_eq!(Vec3f { x: 1.0, y: 2.0, z: 3.0 } * 2.0, Vec3f { x: 2.0, y: 4.0, z: 6.0 });
+    assert_eq!(2.0 * Vec3f { x: 1.0, y: 2.0, z: 3.0 }, Vec3f { x: 2.0, y: 4.0, z: 6.0 });
   }
 
   #[test]
   fn test_len() {
-    let v = Vec3 { x: 1.0, y: 2.0, z: 3.0 };
+    let v = Vec3f { x: 1.0, y: 2.0, z: 3.0 };
     assert!(fcmp::eql(v.len2(), 14.0));
   }
 
   #[test]
   fn test_norm() {
-    let v = (Vec3 { x: 1.0, y: 2.0, z: 3.0 }).norm();
+    let v = (Vec3f { x: 1.0, y: 2.0, z: 3.0 }).norm();
     assert!(fcmp::eql(v.len(), 1.0));
   }
 
   #[test]
   fn test_dot() {
     assert!(fcmp::eql(
-      Vec3::dot(Vec3 { x: 1.0, y: 2.0, z: 3.0 }, Vec3 { x: 4.0, y: 5.0, z: 6.0 }),
+      Vec3f::dot(Vec3f { x: 1.0, y: 2.0, z: 3.0 }, Vec3f { x: 4.0, y: 5.0, z: 6.0 }),
       32.0
     ));
   }
@@ -197,8 +200,8 @@ mod tests {
   #[test]
   fn test_cross() {
     assert_eq!(
-      Vec3::cross(Vec3 { x: 1.0, y: 2.0, z: 3.0 }, Vec3 { x: 4.0, y: 5.0, z: 6.0 }),
-      Vec3 { x: -3.0, y: 6.0, z: -3.0 }
+      Vec3f::cross(Vec3f { x: 1.0, y: 2.0, z: 3.0 }, Vec3f { x: 4.0, y: 5.0, z: 6.0 }),
+      Vec3f { x: -3.0, y: 6.0, z: -3.0 }
     )
   }
 }

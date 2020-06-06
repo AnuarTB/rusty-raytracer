@@ -1,16 +1,16 @@
 use super::objects::Hit;
 
-use crate::geom::Vec3;
+use crate::geom::Vec3f;
 use crate::rendering::Material;
 
 pub struct PointLight {
   pub intensity: f64,
-  pub pos: Vec3,
+  pub pos: Vec3f,
 }
 
 pub struct DirectionalLight {
   pub intensity: f64,
-  pub dir: Vec3,
+  pub dir: Vec3f,
 }
 
 pub struct AmbientLight {
@@ -60,12 +60,12 @@ impl Light for AmbientLight {
   }
 }
 
-fn helper_calc_diffuse(intensity: f64, light_vec: Vec3, hit: Hit) -> f64 {
-  intensity * (Vec3::dot(light_vec, hit.normal).max(0.0))
+fn helper_calc_diffuse(intensity: f64, light_vec: Vec3f, hit: Hit) -> f64 {
+  intensity * (Vec3f::dot(light_vec, hit.normal).max(0.0))
 }
 
-fn helper_calc_specular(intensity: f64, light_vec: Vec3, hit: Hit, exp: f64) -> f64 {
+fn helper_calc_specular(intensity: f64, light_vec: Vec3f, hit: Hit, exp: f64) -> f64 {
   // Phong reflection
-  let r = 2.0 * (Vec3::dot(light_vec, hit.normal)) * hit.normal - light_vec;
-  intensity * Vec3::dot(r.norm(), -hit.loc.norm()).max(0.0).powf(exp)
+  let r = 2.0 * (Vec3f::dot(light_vec, hit.normal)) * hit.normal - light_vec;
+  intensity * Vec3f::dot(r.norm(), -hit.loc.norm()).max(0.0).powf(exp)
 }
