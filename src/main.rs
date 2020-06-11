@@ -10,7 +10,7 @@ mod geom;
 mod rendering;
 mod scene;
 
-fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<&dyn Light>) -> Color {
+fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
   let mut nearest = Hit {
     normal: Vec3f::new(),
     loc: Vec3f::new(),
@@ -49,7 +49,7 @@ fn main() -> std::io::Result<()> {
 
   let mut mat = vec![vec![Color::new(); WIDTH]; HEIGHT];
   let mut objects = Vec::new();
-  let mut lights: Vec<&dyn Light> = Vec::new();
+  let mut lights: Vec<Light> = Vec::new();
   let origin = Vec3f::new();
 
   // Scene setup
@@ -75,17 +75,17 @@ fn main() -> std::io::Result<()> {
     },
   });
 
-  lights.push(&PointLight {
+  lights.push(Light::PointLight(PointLight {
     intensity: 1.0,
     pos: Vec3f { x: 0.0, y: -1.0, z: 4.0 },
-  });
+  }));
 
-  lights.push(&DirectionalLight {
+  lights.push(Light::DirectionalLight(DirectionalLight {
     intensity: 0.5,
     dir: Vec3f { x: -2.0, y: 0.0, z: 1.0 },
-  });
+  }));
 
-  lights.push(&AmbientLight { intensity: 0.2 });
+  lights.push(Light::AmbientLight(AmbientLight { intensity: 0.2 }));
 
   let mut file = File::create("hello.ppm")?;
   file.write(b"P3\n")?;

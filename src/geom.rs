@@ -85,8 +85,7 @@ impl<T: Add<Output = T>> Add for Vec3<T> {
   }
 }
 
-impl<T: Sub<Output = T>> Sub for Vec3<T>
-{
+impl<T: Sub<Output = T>> Sub for Vec3<T> {
   type Output = Self;
 
   fn sub(self, other: Self) -> Self::Output {

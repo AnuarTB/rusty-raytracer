@@ -17,46 +17,34 @@ pub struct AmbientLight {
   pub intensity: f64,
 }
 
-pub trait Light {
-  fn total_reflection(&self, material: Material, hit: Hit) -> f64 {
+pub enum Light {
+  PointLight(PointLight),
+  DirectionalLight(DirectionalLight),
+  AmbientLight(AmbientLight),
+}
+
+impl Light {
+  pub fn total_reflection(&self, material: Material, hit: Hit) -> f64 {
     let mut total: f64 = 0.0;
     total += material.diffuse_coeff * self.diffuse_reflection(hit);
     total += material.specular_coeff * self.specular_reflection(hit, material.exp);
     total
   }
 
-  fn diffuse_reflection(&self, _hit: Hit) -> f64 {
-    0.0
-  }
-
-  fn specular_reflection(&self, _hit: Hit, _exp: f64) -> f64 {
-    0.0
-  }
-}
-
-impl Light for PointLight {
   fn diffuse_reflection(&self, hit: Hit) -> f64 {
-    helper_calc_diffuse(self.intensity, (hit.loc - self.pos).norm(), hit)
+    match *self {
+      Light::PointLight(ref l) => helper_calc_diffuse(l.intensity, (hit.loc - l.pos).norm(), hit),
+      Light::DirectionalLight(ref l) => helper_calc_diffuse(l.intensity, l.dir.norm(), hit),
+      Light::AmbientLight(ref l) => l.intensity,
+    }
   }
 
   fn specular_reflection(&self, hit: Hit, exp: f64) -> f64 {
-    helper_calc_specular(self.intensity, (hit.loc - self.pos).norm(), hit, exp)
-  }
-}
-
-impl Light for DirectionalLight {
-  fn diffuse_reflection(&self, hit: Hit) -> f64 {
-    helper_calc_diffuse(self.intensity, self.dir.norm(), hit)
-  }
-
-  fn specular_reflection(&self, hit: Hit, exp: f64) -> f64 {
-    helper_calc_specular(self.intensity, self.dir.norm(), hit, exp)
-  }
-}
-
-impl Light for AmbientLight {
-  fn diffuse_reflection(&self, _hit: Hit) -> f64 {
-    self.intensity
+    match *self {
+      Light::PointLight(ref l) => helper_calc_specular(l.intensity, (hit.loc - l.pos).norm(), hit, exp),
+      Light::DirectionalLight(ref l) => helper_calc_specular(l.intensity, l.dir.norm(), hit, exp),
+      Light::AmbientLight(ref l) => 0.0,
+    }
   }
 }
 

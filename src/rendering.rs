@@ -1,7 +1,6 @@
+use crate::geom::Vec3;
 use std::fmt;
 use std::ops::Mul;
-use crate::geom::Vec3;
-
 
 pub type Color = Vec3<u8>;
 
