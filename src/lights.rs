@@ -1,5 +1,4 @@
-use super::objects::Hit;
-
+use crate::objects::Hit;
 use crate::geom::Vec3f;
 use crate::rendering::Material;
 
@@ -43,7 +42,7 @@ impl Light {
     match *self {
       Light::PointLight(ref l) => helper_calc_specular(l.intensity, (hit.loc - l.pos).norm(), hit, exp),
       Light::DirectionalLight(ref l) => helper_calc_specular(l.intensity, l.dir.norm(), hit, exp),
-      Light::AmbientLight(ref l) => 0.0,
+      Light::AmbientLight(ref _l) => 0.0,
     }
   }
 }

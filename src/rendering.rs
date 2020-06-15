@@ -1,4 +1,7 @@
-use crate::geom::Vec3;
+use crate::geom::*;
+use crate::lights::Light;
+use crate::objects::*;
+
 use std::fmt;
 use std::ops::Mul;
 
@@ -55,4 +58,36 @@ mod tests {
   fn test_mul_color() {
     assert_eq!(Color { x: 1, y: 100, z: 30 } * 3.0, Color { x: 3, y: 255, z: 90 });
   }
+}
+
+pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
+  let mut nearest = Hit {
+    normal: Vec3f::new(),
+    loc: Vec3f::new(),
+    t: std::f64::INFINITY,
+  };
+  let mut color_ret = Color { x: 255, y: 255, z: 255 };
+  let mut material = Material::new();
+
+  for object in objects {
+    match object.hit(ray) {
+      None => continue,
+      Some(hit) => {
+        if fcmp::smlr(hit.t, nearest.t) {
+          nearest = hit;
+          color_ret = object.material.color;
+          material = object.material;
+        }
+      }
+    }
+  }
+
+  if nearest.t != std::f64::INFINITY {
+    let mut total_intensity = 0.0;
+    for light in lights {
+      total_intensity += light.total_reflection(material, nearest);
+    }
+    color_ret = color_ret * total_intensity;
+  }
+  color_ret
 }
