@@ -1,14 +1,14 @@
 use geom::Vec3f;
-use rendering::{Color, Material};
 use lights::*;
 use objects::Sphere;
+use rendering::{Color, Material};
 use scene::Scene;
 
 mod geom;
-mod rendering;
-mod scene;
 mod lights;
 mod objects;
+mod rendering;
+mod scene;
 
 fn main() -> std::io::Result<()> {
   // Initialize variables and constants

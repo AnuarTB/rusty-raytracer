@@ -1,5 +1,5 @@
-use crate::objects::Hit;
 use crate::geom::Vec3f;
+use crate::objects::Hit;
 use crate::rendering::Material;
 
 pub struct PointLight {
@@ -32,7 +32,7 @@ impl Light {
 
   fn diffuse_reflection(&self, hit: Hit) -> f64 {
     match *self {
-      Light::PointLight(ref l) => helper_calc_diffuse(l.intensity, (hit.loc - l.pos).norm(), hit),
+      Light::PointLight(ref l) => helper_calc_diffuse(l.intensity, (hit.pos - l.pos).norm(), hit),
       Light::DirectionalLight(ref l) => helper_calc_diffuse(l.intensity, l.dir.norm(), hit),
       Light::AmbientLight(ref l) => l.intensity,
     }
@@ -40,7 +40,7 @@ impl Light {
 
   fn specular_reflection(&self, hit: Hit, exp: f64) -> f64 {
     match *self {
-      Light::PointLight(ref l) => helper_calc_specular(l.intensity, (hit.loc - l.pos).norm(), hit, exp),
+      Light::PointLight(ref l) => helper_calc_specular(l.intensity, (hit.pos - l.pos).norm(), hit, exp),
       Light::DirectionalLight(ref l) => helper_calc_specular(l.intensity, l.dir.norm(), hit, exp),
       Light::AmbientLight(ref _l) => 0.0,
     }
@@ -54,5 +54,5 @@ fn helper_calc_diffuse(intensity: f64, light_vec: Vec3f, hit: Hit) -> f64 {
 fn helper_calc_specular(intensity: f64, light_vec: Vec3f, hit: Hit, exp: f64) -> f64 {
   // Phong reflection
   let r = 2.0 * (Vec3f::dot(light_vec, hit.normal)) * hit.normal - light_vec;
-  intensity * Vec3f::dot(r.norm(), -hit.loc.norm()).max(0.0).powf(exp)
+  intensity * Vec3f::dot(r.norm(), -hit.pos.norm()).max(0.0).powf(exp)
 }

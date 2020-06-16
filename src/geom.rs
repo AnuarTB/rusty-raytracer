@@ -140,6 +140,10 @@ pub struct Ray {
 }
 
 impl Ray {
+  pub fn new_norm(orig: Vec3f, dir: Vec3f) -> Self {
+    Ray { orig, dir: dir.norm() }
+  }
+
   pub fn at(&self, t: f64) -> Vec3f {
     self.orig + self.dir * t
   }

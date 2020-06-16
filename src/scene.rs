@@ -1,7 +1,7 @@
 use crate::geom::{Ray, Vec3f};
-use crate::rendering::{cast_ray, Color};
 use crate::lights::Light;
 use crate::objects::Sphere;
+use crate::rendering::{cast_ray, Color};
 use std::fs::File;
 use std::io::prelude::*;
 

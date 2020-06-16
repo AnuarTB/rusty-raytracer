@@ -60,34 +60,42 @@ mod tests {
   }
 }
 
-pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
-  let mut nearest = Hit {
-    normal: Vec3f::new(),
-    loc: Vec3f::new(),
-    t: std::f64::INFINITY,
-  };
-  let mut color_ret = Color { x: 255, y: 255, z: 255 };
-  let mut material = Material::new();
+const BACKGROUND_COLOR: Color = Color { x: 255, y: 255, z: 255 };
+const SHADOW_BIAS: f64 = 1e-3;
 
+pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
+  let mut nearest: Option<(Hit, &Sphere)> = None;
   for object in objects {
     match object.hit(ray) {
       None => continue,
       Some(hit) => {
-        if fcmp::smlr(hit.t, nearest.t) {
-          nearest = hit;
-          color_ret = object.material.color;
-          material = object.material;
+        if nearest.is_none() || fcmp::smlr(hit.t, nearest.unwrap().0.t) {
+          nearest = Some((hit, &object));
         }
       }
     }
   }
+  nearest
+}
 
-  if nearest.t != std::f64::INFINITY {
-    let mut total_intensity = 0.0;
-    for light in lights {
-      total_intensity += light.total_reflection(material, nearest);
+pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
+  match hit_object(ray, objects) {
+    None => BACKGROUND_COLOR,
+    Some((hit, object)) => {
+      let mut total_intensity: f64 = 0.0;
+      for light in lights {
+        let in_shadow: bool = match light {
+          Light::PointLight(l) => {
+            let shadow_hit = hit_object(Ray::new_norm(l.pos + hit.normal * SHADOW_BIAS, l.pos - hit.pos), objects);
+            !(shadow_hit.is_none() || fcmp::grtr(shadow_hit.unwrap().0.t, (l.pos - hit.pos).len()))
+          }
+          _ => false,
+        };
+        if !in_shadow {
+          total_intensity += light.total_reflection(object.material, hit);
+        }
+      }
+      object.material.color * total_intensity
     }
-    color_ret = color_ret * total_intensity;
   }
-  color_ret
 }

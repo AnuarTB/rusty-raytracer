@@ -5,7 +5,7 @@ use crate::rendering::Material;
 #[derive(Debug, Clone, Copy)]
 pub struct Hit {
   pub normal: Vec3f,
-  pub loc: Vec3f,
+  pub pos: Vec3f,
   pub t: f64,
 }
 
@@ -48,9 +48,9 @@ impl Hittable for Sphere {
 
       let t = x1.min(x2);
       let normal = (ray.at(t) - self.center).norm();
-      let loc = ray.at(t);
+      let pos = ray.at(t);
 
-      Some(Hit { normal, loc, t })
+      Some(Hit { normal, pos, t })
     }
   }
 }
