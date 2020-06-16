@@ -35,12 +35,14 @@ impl Scene {
   }
 
   pub fn update(&mut self) {
+    let aspect_ratio: f64 = (self.width as f64) / (self.height as f64);
+    let fov_adjustment = (self.fov.to_radians() / 2.0).tan();
     for i in 0..self.height {
       for j in 0..self.width {
         let height_f = self.height as f64;
         let width_f = self.width as f64;
-        let y: f64 = (-(i as f64) + height_f / 2.0) / height_f;
-        let x: f64 = (j as f64 - width_f / 2.0) / width_f;
+        let x: f64 = ((j as f64 + 0.5) / width_f * 2.0 - 1.0) * fov_adjustment * aspect_ratio;
+        let y: f64 = (1.0 - (i as f64 + 0.5) / height_f * 2.0) * fov_adjustment;
         let dir = (Vec3f { x, y, z: 1.0 }).norm();
         self.framebuffer[i][j] = cast_ray(Ray { orig: ORIGIN, dir }, &self.objects, &self.lights);
       }

@@ -12,7 +12,7 @@ mod scene;
 
 fn main() -> std::io::Result<()> {
   // Initialize variables and constants
-  let mut scene = Scene::new(600, 600, 45.0);
+  let mut scene = Scene::new(600, 600, 60.0);
 
   // Scene setup
   scene.objects.push(Sphere {
