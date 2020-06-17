@@ -19,6 +19,12 @@ impl fmt::Display for Color {
   }
 }
 
+impl PartialEq for Color {
+  fn eq(&self, other: &Self) -> bool {
+    self.x == other.x && self.y == other.y && self.z == other.z
+  }
+}
+
 impl Mul<f64> for Color {
   type Output = Self;
 
@@ -61,7 +67,7 @@ mod tests {
 }
 
 const BACKGROUND_COLOR: Color = Color { x: 255, y: 255, z: 255 };
-const SHADOW_BIAS: f64 = 1e-3;
+const SHADOW_BIAS: f64 = 1e-4;
 
 pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
   let mut nearest: Option<(Hit, &Sphere)> = None;
@@ -86,7 +92,7 @@ pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
       for light in lights {
         let in_shadow: bool = match light {
           Light::PointLight(l) => {
-            let shadow_hit = hit_object(Ray::new_norm(l.pos + hit.normal * SHADOW_BIAS, l.pos - hit.pos), objects);
+            let shadow_hit = hit_object(Ray::new_norm(hit.pos + (hit.normal * SHADOW_BIAS), l.pos - hit.pos), objects);
             !(shadow_hit.is_none() || fcmp::grtr(shadow_hit.unwrap().0.t, (l.pos - hit.pos).len()))
           }
           _ => false,

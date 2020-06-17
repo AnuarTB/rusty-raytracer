@@ -32,16 +32,16 @@ impl Light {
 
   fn diffuse_reflection(&self, hit: Hit) -> f64 {
     match *self {
-      Light::PointLight(ref l) => helper_calc_diffuse(l.intensity, (hit.pos - l.pos).norm(), hit),
-      Light::DirectionalLight(ref l) => helper_calc_diffuse(l.intensity, l.dir.norm(), hit),
+      Light::PointLight(ref l) => helper_calc_diffuse(l.intensity, (l.pos - hit.pos).norm(), hit),
+      Light::DirectionalLight(ref l) => helper_calc_diffuse(l.intensity, -l.dir.norm(), hit),
       Light::AmbientLight(ref l) => l.intensity,
     }
   }
 
   fn specular_reflection(&self, hit: Hit, exp: f64) -> f64 {
     match *self {
-      Light::PointLight(ref l) => helper_calc_specular(l.intensity, (hit.pos - l.pos).norm(), hit, exp),
-      Light::DirectionalLight(ref l) => helper_calc_specular(l.intensity, l.dir.norm(), hit, exp),
+      Light::PointLight(ref l) => helper_calc_specular(l.intensity, (l.pos - hit.pos).norm(), hit, exp),
+      Light::DirectionalLight(ref l) => helper_calc_specular(l.intensity, -l.dir.norm(), hit, exp),
       Light::AmbientLight(ref _l) => 0.0,
     }
   }

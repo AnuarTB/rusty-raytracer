@@ -46,7 +46,18 @@ impl Hittable for Sphere {
       let x1 = (-b + d.sqrt()) / (2.0 * a);
       let x2 = (-b - d.sqrt()) / (2.0 * a);
 
-      let t = x1.min(x2);
+      let mut t = x1.min(x2);
+
+      if x1 < 0.0 || x2 < 0.0 {
+        if x1 < 0.0 && x1 < 0.0 {
+          return None;
+        } else if x1 < 0.0 {
+          t = x2;
+        } else {
+          t = x1;
+        }
+      }
+
       let normal = (ray.at(t) - self.center).norm();
       let pos = ray.at(t);
 
