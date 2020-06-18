@@ -37,6 +37,17 @@ fn main() -> std::io::Result<()> {
     },
   });
 
+  scene.objects.push(Sphere {
+    radius: 20.0,
+    center: Vec3f { x: 1.0, y: -20.0, z: 10.0 },
+    material: Material {
+      color: Color { x: 125, y: 0, z: 125 },
+      diffuse_coeff: 1.0,
+      specular_coeff: 0.0,
+      exp: 0.0,
+    },
+  });
+
   scene.lights.push(Light::PointLight(PointLight {
     intensity: 1.0,
     pos: Vec3f { x: 0.0, y: 8.0, z: 4.0 },
