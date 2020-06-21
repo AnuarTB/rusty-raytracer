@@ -45,6 +45,10 @@ impl Vec3f {
     }
   }
 
+  pub fn reflect(&self, normal: Vec3f) -> Vec3f {
+    2.0 * Vec3f::dot(*self, normal.norm()) * normal.norm() - *self
+  }
+
   /// Returns a squared length of the vector
   pub fn len2(&self) -> f64 {
     self.x * self.x + self.y * self.y + self.z * self.z
@@ -73,10 +77,10 @@ impl PartialEq for Vec3f {
   }
 }
 
-impl<T: Add<Output = T>> Add for Vec3<T> {
+impl Add for Vec3f {
   type Output = Self;
 
-  fn add(self, other: Self) -> Self::Output {
+  fn add(self, other: Self) -> Self {
     Self {
       x: self.x + other.x,
       y: self.y + other.y,
@@ -85,10 +89,10 @@ impl<T: Add<Output = T>> Add for Vec3<T> {
   }
 }
 
-impl<T: Sub<Output = T>> Sub for Vec3<T> {
+impl Sub for Vec3f {
   type Output = Self;
 
-  fn sub(self, other: Self) -> Self::Output {
+  fn sub(self, other: Self) -> Self {
     Self {
       x: self.x - other.x,
       y: self.y - other.y,

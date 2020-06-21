@@ -12,7 +12,7 @@ mod scene;
 
 fn main() -> std::io::Result<()> {
   // Initialize variables and constants
-  let mut scene = Scene::new(600, 600, 60.0);
+  let mut scene = Scene::new(800, 800, 60.0, 1);
 
   // Scene setup
   scene.objects.push(Sphere {
@@ -23,6 +23,7 @@ fn main() -> std::io::Result<()> {
       diffuse_coeff: 0.7,
       specular_coeff: 0.5,
       exp: 7.0,
+      refl: 0.0,
     },
   });
 
@@ -34,6 +35,19 @@ fn main() -> std::io::Result<()> {
       diffuse_coeff: 0.7,
       specular_coeff: 0.7,
       exp: 5.0,
+      refl: 0.0,
+    },
+  });
+
+  scene.objects.push(Sphere {
+    radius: 1.0,
+    center: Vec3f { x: 0.0, y: 2.5, z: 6.0 },
+    material: Material {
+      color: Color { x: 20, y: 190, z: 20 },
+      diffuse_coeff: 0.7,
+      specular_coeff: 0.0,
+      exp: 5.0,
+      refl: 0.6,
     },
   });
 
@@ -45,6 +59,7 @@ fn main() -> std::io::Result<()> {
       diffuse_coeff: 1.0,
       specular_coeff: 0.0,
       exp: 0.0,
+      refl: 0.0,
     },
   });
 

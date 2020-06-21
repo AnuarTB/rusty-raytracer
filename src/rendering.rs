@@ -3,7 +3,7 @@ use crate::lights::Light;
 use crate::objects::*;
 
 use std::fmt;
-use std::ops::Mul;
+use std::ops::{Add, Mul};
 
 pub type Color = Vec3<u8>;
 
@@ -37,12 +37,37 @@ impl Mul<f64> for Color {
   }
 }
 
+impl Mul<Color> for f64 {
+  type Output = Color;
+
+  fn mul(self, other: Color) -> Color {
+    Color {
+      x: (other.x as f64 * self).min(255.0).max(0.0) as u8,
+      y: (other.y as f64 * self).min(255.0).max(0.0) as u8,
+      z: (other.z as f64 * self).min(255.0).max(0.0) as u8,
+    }
+  }
+}
+
+impl Add<Color> for Color {
+  type Output = Self;
+
+  fn add(self, other: Color) -> Self {
+    Self {
+      x: (self.x as u16 + other.x as u16).min(255).max(0) as u8,
+      y: (self.y as u16 + other.y as u16).min(255).max(0) as u8,
+      z: (self.z as u16 + other.z as u16).min(255).max(0) as u8,
+    }
+  }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub struct Material {
   pub color: Color,
   pub diffuse_coeff: f64,
   pub specular_coeff: f64,
   pub exp: f64,
+  pub refl: f64,
 }
 
 impl Material {
@@ -52,6 +77,7 @@ impl Material {
       diffuse_coeff: 0.0,
       specular_coeff: 0.0,
       exp: 0.0,
+      refl: 0.0,
     }
   }
 }
@@ -84,7 +110,7 @@ pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
   nearest
 }
 
-pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
+pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>, depth: u32) -> Color {
   match hit_object(ray, objects) {
     None => BACKGROUND_COLOR,
     Some((hit, object)) => {
@@ -101,7 +127,18 @@ pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>) -> Color {
           total_intensity += light.total_reflection(object.material, hit);
         }
       }
-      object.material.color * total_intensity
+
+      if object.material.refl > 0.0 && depth > 0 {
+        object.material.color * total_intensity * (1.0 - object.material.refl)
+          + cast_ray(
+            Ray::new_norm(hit.pos + hit.normal * SHADOW_BIAS, (-ray.dir).reflect(hit.normal)),
+            objects,
+            lights,
+            depth - 1,
+          ) * object.material.refl
+      } else {
+        object.material.color * total_intensity
+      }
     }
   }
 }

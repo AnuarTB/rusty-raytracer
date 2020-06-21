@@ -20,10 +20,13 @@ pub struct Scene {
 
   // Camera
   pub fov: f64,
+
+  // Rendering
+  pub recursion_depth: u32,
 }
 
 impl Scene {
-  pub fn new(width: usize, height: usize, fov: f64) -> Self {
+  pub fn new(width: usize, height: usize, fov: f64, recursion_depth: u32) -> Self {
     Self {
       objects: Vec::new(),
       lights: Vec::new(),
@@ -31,6 +34,7 @@ impl Scene {
       height,
       framebuffer: vec![vec![Color::new(); width]; height],
       fov,
+      recursion_depth,
     }
   }
 
@@ -44,7 +48,7 @@ impl Scene {
         let x: f64 = ((j as f64 + 0.5) / width_f * 2.0 - 1.0) * fov_adjustment * aspect_ratio;
         let y: f64 = (1.0 - (i as f64 + 0.5) / height_f * 2.0) * fov_adjustment;
         let dir = (Vec3f { x, y, z: 1.0 }).norm();
-        self.framebuffer[i][j] = cast_ray(Ray { orig: ORIGIN, dir }, &self.objects, &self.lights);
+        self.framebuffer[i][j] = cast_ray(Ray { orig: ORIGIN, dir }, &self.objects, &self.lights, self.recursion_depth);
       }
     }
   }
