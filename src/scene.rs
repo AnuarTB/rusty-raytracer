@@ -5,7 +5,7 @@ use crate::rendering::{cast_ray, Color};
 use std::fs::File;
 use std::io::prelude::*;
 
-use glm::Vec3;
+use glm::{Vec3, Vec4};
 
 pub struct Scene {
   // TODO: Separate objects
@@ -20,12 +20,14 @@ pub struct Scene {
 
   // Camera
   pub fov: f32,
+  pub camera_pos: Vec3,
+  pub look_at: Vec3,
 
   // Rendering
   pub recursion_depth: u32,
 }
 
-impl Scene {
+impl<'a> Scene {
   pub fn new(width: usize, height: usize, fov: f32, recursion_depth: u32) -> Self {
     Self {
       objects: Vec::new(),
@@ -34,6 +36,8 @@ impl Scene {
       height,
       framebuffer: vec![vec![glm::zero(); width]; height],
       fov,
+      camera_pos: glm::zero(),
+      look_at: Vec3::new(0.0, 0.0, 1.0),
       recursion_depth,
     }
   }
@@ -41,14 +45,30 @@ impl Scene {
   pub fn update(&mut self) {
     let aspect_ratio: f32 = (self.width as f32) / (self.height as f32);
     let fov_adjustment = (self.fov.to_radians() / 2.0).tan();
+    let look_at_mat = glm::look_at(
+      &self.camera_pos, 
+      &self.look_at, 
+      &Vec3::new(0.0, 1.0, 0.0)
+    );
+
     for i in 0..self.height {
       for j in 0..self.width {
         let height_f = self.height as f32;
         let width_f = self.width as f32;
         let x: f32 = ((j as f32 + 0.5) / width_f * 2.0 - 1.0) * fov_adjustment * aspect_ratio;
         let y: f32 = (1.0 - (i as f32 + 0.5) / height_f * 2.0) * fov_adjustment;
-        let dir = glm::normalize(&Vec3::new(x, y, 1.0));
-        self.framebuffer[i][j] = cast_ray(Ray { orig: glm::zero(), dir }, &self.objects, &self.lights, self.recursion_depth);
+
+        let dir = glm::vec4_to_vec3(&(look_at_mat * Vec4::new(x, y, -1.0, 1.0)));
+
+        self.framebuffer[i][j] = cast_ray(
+          Ray {
+            orig: self.camera_pos,
+            dir,
+          },
+          &self.objects,
+          &self.lights,
+          self.recursion_depth,
+        );
       }
     }
   }

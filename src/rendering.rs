@@ -25,7 +25,7 @@ impl Material {
   pub fn new() -> Self {
     Material {
       color: glm::zero(),
-      diffuse_coeff: 0.0,
+      diffuse_coeff: 1.0,
       specular_coeff: 0.0,
       exp: 0.0,
       refl: 0.0,
