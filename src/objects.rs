@@ -42,7 +42,7 @@ impl Hittable for Sphere {
 
     // Computing discriminant
     let d = b * b - 4.0 * a * c;
-    if fcmp::smlr(d, 0.0) {
+    if d < 0.0 {
       return None;
     } else {
       let x1 = (-b + d.sqrt()) / (2.0 * a);

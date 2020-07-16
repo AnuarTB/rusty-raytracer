@@ -106,7 +106,7 @@ pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
     match object.hit(ray) {
       None => continue,
       Some(hit) => {
-        if nearest.is_none() || fcmp::smlr(hit.t, nearest.unwrap().0.t) {
+        if nearest.is_none() || hit.t < nearest.unwrap().0.t {
           nearest = Some((hit, &object));
         }
       }
@@ -124,7 +124,7 @@ pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>, depth: u32
         let in_shadow: bool = match light {
           Light::PointLight(l) => {
             let shadow_hit = hit_object(Ray::new_norm(hit.pos + (hit.normal * SHADOW_BIAS), l.pos - hit.pos), objects);
-            !(shadow_hit.is_none() || fcmp::grtr(shadow_hit.unwrap().0.t, glm::length(&(l.pos - hit.pos))))
+            !(shadow_hit.is_none() || shadow_hit.unwrap().0.t > glm::length(&(l.pos - hit.pos)))
           }
           _ => false,
         };
