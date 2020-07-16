@@ -1,4 +1,6 @@
-use geom::Vec3f;
+extern crate nalgebra_glm as glm;
+
+use glm::Vec3;
 use lights::*;
 use objects::Sphere;
 use rendering::{Color, Material};
@@ -17,7 +19,7 @@ fn main() -> std::io::Result<()> {
   // Scene setup
   scene.objects.push(Sphere {
     radius: 1.0,
-    center: Vec3f { x: -1.0, y: 0.0, z: 4.0 },
+    center: Vec3::new(-1.0, 0.0, 4.0),
     material: Material {
       color: Color { x: 210, y: 0, z: 0 },
       diffuse_coeff: 0.7,
@@ -29,7 +31,7 @@ fn main() -> std::io::Result<()> {
 
   scene.objects.push(Sphere {
     radius: 1.0,
-    center: Vec3f { x: 1.0, y: 1.0, z: 5.0 },
+    center: Vec3::new(1.0, 1.0, 5.0),
     material: Material {
       color: Color { x: 190, y: 255, z: 0 },
       diffuse_coeff: 0.7,
@@ -41,7 +43,7 @@ fn main() -> std::io::Result<()> {
 
   scene.objects.push(Sphere {
     radius: 1.0,
-    center: Vec3f { x: 0.0, y: 2.5, z: 6.0 },
+    center: Vec3::new(0.0, 2.5, 6.0),
     material: Material {
       color: Color { x: 20, y: 190, z: 20 },
       diffuse_coeff: 0.7,
@@ -53,7 +55,7 @@ fn main() -> std::io::Result<()> {
 
   scene.objects.push(Sphere {
     radius: 20.0,
-    center: Vec3f { x: 1.0, y: -20.0, z: 10.0 },
+    center: Vec3::new(1.0, -20.0, 10.0),
     material: Material {
       color: Color { x: 125, y: 0, z: 125 },
       diffuse_coeff: 1.0,
@@ -65,13 +67,14 @@ fn main() -> std::io::Result<()> {
 
   scene.lights.push(Light::PointLight(PointLight {
     intensity: 1.0,
-    pos: Vec3f { x: 0.0, y: 8.0, z: 4.0 },
+    pos: Vec3::new(0.0, 8.0, 4.0),
   }));
 
   scene.lights.push(Light::DirectionalLight(DirectionalLight {
     intensity: 0.5,
-    dir: Vec3f { x: -2.0, y: 0.0, z: 1.0 },
+    dir: Vec3::new(-2.0, 0.0, 1.0),
   }));
+
   scene.lights.push(Light::AmbientLight(AmbientLight { intensity: 0.2 }));
 
   scene.render_to_ppm("image.ppm")?;

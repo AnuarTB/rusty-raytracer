@@ -5,7 +5,12 @@ use crate::objects::*;
 use std::fmt;
 use std::ops::{Add, Mul};
 
-pub type Color = Vec3<u8>;
+#[derive(Copy, Clone, Debug)]
+pub struct Color {
+  pub x: u8,
+  pub y: u8,
+  pub z: u8,
+}
 
 impl Color {
   pub fn new() -> Color {
@@ -25,26 +30,26 @@ impl PartialEq for Color {
   }
 }
 
-impl Mul<f64> for Color {
+impl Mul<f32> for Color {
   type Output = Self;
 
-  fn mul(self, scalar: f64) -> Self {
+  fn mul(self, scalar: f32) -> Self {
     Self {
-      x: (self.x as f64 * scalar).min(255.0).max(0.0) as u8,
-      y: (self.y as f64 * scalar).min(255.0).max(0.0) as u8,
-      z: (self.z as f64 * scalar).min(255.0).max(0.0) as u8,
+      x: (self.x as f32 * scalar).min(255.0).max(0.0) as u8,
+      y: (self.y as f32 * scalar).min(255.0).max(0.0) as u8,
+      z: (self.z as f32 * scalar).min(255.0).max(0.0) as u8,
     }
   }
 }
 
-impl Mul<Color> for f64 {
+impl Mul<Color> for f32 {
   type Output = Color;
 
   fn mul(self, other: Color) -> Color {
     Color {
-      x: (other.x as f64 * self).min(255.0).max(0.0) as u8,
-      y: (other.y as f64 * self).min(255.0).max(0.0) as u8,
-      z: (other.z as f64 * self).min(255.0).max(0.0) as u8,
+      x: (other.x as f32 * self).min(255.0).max(0.0) as u8,
+      y: (other.y as f32 * self).min(255.0).max(0.0) as u8,
+      z: (other.z as f32 * self).min(255.0).max(0.0) as u8,
     }
   }
 }
@@ -64,10 +69,10 @@ impl Add<Color> for Color {
 #[derive(Debug, Clone, Copy)]
 pub struct Material {
   pub color: Color,
-  pub diffuse_coeff: f64,
-  pub specular_coeff: f64,
-  pub exp: f64,
-  pub refl: f64,
+  pub diffuse_coeff: f32,
+  pub specular_coeff: f32,
+  pub exp: f32,
+  pub refl: f32,
 }
 
 impl Material {
@@ -93,7 +98,7 @@ mod tests {
 }
 
 const BACKGROUND_COLOR: Color = Color { x: 255, y: 255, z: 255 };
-const SHADOW_BIAS: f64 = 1e-4;
+const SHADOW_BIAS: f32 = 1e-4;
 
 pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
   let mut nearest: Option<(Hit, &Sphere)> = None;
@@ -114,12 +119,12 @@ pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>, depth: u32
   match hit_object(ray, objects) {
     None => BACKGROUND_COLOR,
     Some((hit, object)) => {
-      let mut total_intensity: f64 = 0.0;
+      let mut total_intensity: f32 = 0.0;
       for light in lights {
         let in_shadow: bool = match light {
           Light::PointLight(l) => {
             let shadow_hit = hit_object(Ray::new_norm(hit.pos + (hit.normal * SHADOW_BIAS), l.pos - hit.pos), objects);
-            !(shadow_hit.is_none() || fcmp::grtr(shadow_hit.unwrap().0.t, (l.pos - hit.pos).len()))
+            !(shadow_hit.is_none() || fcmp::grtr(shadow_hit.unwrap().0.t, glm::length(&(l.pos - hit.pos))))
           }
           _ => false,
         };
@@ -131,7 +136,7 @@ pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>, depth: u32
       if object.material.refl > 0.0 && depth > 0 {
         object.material.color * total_intensity * (1.0 - object.material.refl)
           + cast_ray(
-            Ray::new_norm(hit.pos + hit.normal * SHADOW_BIAS, (-ray.dir).reflect(hit.normal)),
+            Ray::new_norm(hit.pos + hit.normal * SHADOW_BIAS, glm::reflect_vec(&ray.dir, &hit.normal)),
             objects,
             lights,
             depth - 1,
