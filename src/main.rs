@@ -1,4 +1,6 @@
 extern crate nalgebra_glm as glm;
+#[macro_use]
+extern crate lazy_static;
 
 use glm::Vec3;
 use lights::*;
@@ -21,7 +23,7 @@ fn main() -> std::io::Result<()> {
     radius: 1.0,
     center: Vec3::new(-1.0, 0.0, 4.0),
     material: Material {
-      color: Color { x: 210, y: 0, z: 0 },
+      color: Color::new(0.8, 0.0, 0.0),
       diffuse_coeff: 0.7,
       specular_coeff: 0.5,
       exp: 7.0,
@@ -33,7 +35,7 @@ fn main() -> std::io::Result<()> {
     radius: 1.0,
     center: Vec3::new(1.0, 1.0, 5.0),
     material: Material {
-      color: Color { x: 190, y: 255, z: 0 },
+      color: Color::new(0.75, 1.0, 0.0),
       diffuse_coeff: 0.7,
       specular_coeff: 0.7,
       exp: 5.0,
@@ -45,7 +47,7 @@ fn main() -> std::io::Result<()> {
     radius: 1.0,
     center: Vec3::new(0.0, 2.5, 6.0),
     material: Material {
-      color: Color { x: 20, y: 190, z: 20 },
+      color: Color::new(0.05, 0.75, 0.05),
       diffuse_coeff: 0.7,
       specular_coeff: 0.0,
       exp: 5.0,
@@ -57,7 +59,7 @@ fn main() -> std::io::Result<()> {
     radius: 20.0,
     center: Vec3::new(1.0, -20.0, 10.0),
     material: Material {
-      color: Color { x: 125, y: 0, z: 125 },
+      color: Color::new(0.5, 0.0, 0.5),
       diffuse_coeff: 1.0,
       specular_coeff: 0.0,
       exp: 0.0,

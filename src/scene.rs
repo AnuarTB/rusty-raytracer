@@ -32,7 +32,7 @@ impl Scene {
       lights: Vec::new(),
       width,
       height,
-      framebuffer: vec![vec![Color::new(); width]; height],
+      framebuffer: vec![vec![glm::zero(); width]; height],
       fov,
       recursion_depth,
     }
@@ -53,6 +53,11 @@ impl Scene {
     }
   }
 
+  pub fn convert_color256(color: Color) -> String {
+    let ret: Vec3 = color * 255.0;
+    format!("{} {} {}", ret.x as u8, ret.y as u8, ret.z as u8)
+  }
+
   pub fn render_to_ppm(&mut self, filename: &str) -> std::io::Result<()> {
     self.update();
 
@@ -64,7 +69,7 @@ impl Scene {
 
     for i in 0..self.height {
       for j in 0..self.width {
-        file.write(format!("{}\t", self.framebuffer[i][j]).as_bytes())?;
+        file.write(format!("{}\t", Scene::convert_color256(self.framebuffer[i][j])).as_bytes())?;
       }
       file.write(b"\n")?;
     }
