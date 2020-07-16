@@ -1,79 +1,30 @@
 use crate::geom::*;
 use crate::lights::Light;
 use crate::objects::*;
+use glm::Vec3;
 
-use std::fmt;
-use std::ops::{Add, Mul};
+pub type Color = Vec3;
 
-pub type Color = Vec3<u8>;
-
-impl Color {
-  pub fn new() -> Color {
-    Color { x: 0, y: 0, z: 0 }
-  }
+// Constants
+lazy_static! {
+  static ref BACKGROUND_COLOR: Color = Color::new(1.0, 1.0, 1.0);
 }
 
-impl fmt::Display for Color {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{} {} {}", self.x, self.y, self.z)
-  }
-}
-
-impl PartialEq for Color {
-  fn eq(&self, other: &Self) -> bool {
-    self.x == other.x && self.y == other.y && self.z == other.z
-  }
-}
-
-impl Mul<f64> for Color {
-  type Output = Self;
-
-  fn mul(self, scalar: f64) -> Self {
-    Self {
-      x: (self.x as f64 * scalar).min(255.0).max(0.0) as u8,
-      y: (self.y as f64 * scalar).min(255.0).max(0.0) as u8,
-      z: (self.z as f64 * scalar).min(255.0).max(0.0) as u8,
-    }
-  }
-}
-
-impl Mul<Color> for f64 {
-  type Output = Color;
-
-  fn mul(self, other: Color) -> Color {
-    Color {
-      x: (other.x as f64 * self).min(255.0).max(0.0) as u8,
-      y: (other.y as f64 * self).min(255.0).max(0.0) as u8,
-      z: (other.z as f64 * self).min(255.0).max(0.0) as u8,
-    }
-  }
-}
-
-impl Add<Color> for Color {
-  type Output = Self;
-
-  fn add(self, other: Color) -> Self {
-    Self {
-      x: (self.x as u16 + other.x as u16).min(255).max(0) as u8,
-      y: (self.y as u16 + other.y as u16).min(255).max(0) as u8,
-      z: (self.z as u16 + other.z as u16).min(255).max(0) as u8,
-    }
-  }
-}
+const SHADOW_BIAS: f32 = 1e-4;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Material {
   pub color: Color,
-  pub diffuse_coeff: f64,
-  pub specular_coeff: f64,
-  pub exp: f64,
-  pub refl: f64,
+  pub diffuse_coeff: f32,
+  pub specular_coeff: f32,
+  pub exp: f32,
+  pub refl: f32,
 }
 
 impl Material {
   pub fn new() -> Self {
     Material {
-      color: Color::new(),
+      color: glm::zero(),
       diffuse_coeff: 0.0,
       specular_coeff: 0.0,
       exp: 0.0,
@@ -82,26 +33,13 @@ impl Material {
   }
 }
 
-#[cfg(test)]
-mod tests {
-  use super::*;
-
-  #[test]
-  fn test_mul_color() {
-    assert_eq!(Color { x: 1, y: 100, z: 30 } * 3.0, Color { x: 3, y: 255, z: 90 });
-  }
-}
-
-const BACKGROUND_COLOR: Color = Color { x: 255, y: 255, z: 255 };
-const SHADOW_BIAS: f64 = 1e-4;
-
 pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
   let mut nearest: Option<(Hit, &Sphere)> = None;
   for object in objects {
     match object.hit(ray) {
       None => continue,
       Some(hit) => {
-        if nearest.is_none() || fcmp::smlr(hit.t, nearest.unwrap().0.t) {
+        if nearest.is_none() || hit.t < nearest.unwrap().0.t {
           nearest = Some((hit, &object));
         }
       }
@@ -112,14 +50,14 @@ pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
 
 pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>, depth: u32) -> Color {
   match hit_object(ray, objects) {
-    None => BACKGROUND_COLOR,
+    None => *BACKGROUND_COLOR,
     Some((hit, object)) => {
-      let mut total_intensity: f64 = 0.0;
+      let mut total_intensity: f32 = 0.0;
       for light in lights {
         let in_shadow: bool = match light {
           Light::PointLight(l) => {
             let shadow_hit = hit_object(Ray::new_norm(hit.pos + (hit.normal * SHADOW_BIAS), l.pos - hit.pos), objects);
-            !(shadow_hit.is_none() || fcmp::grtr(shadow_hit.unwrap().0.t, (l.pos - hit.pos).len()))
+            !(shadow_hit.is_none() || shadow_hit.unwrap().0.t > glm::length(&(l.pos - hit.pos)))
           }
           _ => false,
         };
@@ -127,18 +65,20 @@ pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>, depth: u32
           total_intensity += light.total_reflection(object.material, hit);
         }
       }
-
+      let ret: Vec3;
       if object.material.refl > 0.0 && depth > 0 {
-        object.material.color * total_intensity * (1.0 - object.material.refl)
+        ret = object.material.color * total_intensity * (1.0 - object.material.refl)
           + cast_ray(
-            Ray::new_norm(hit.pos + hit.normal * SHADOW_BIAS, (-ray.dir).reflect(hit.normal)),
+            Ray::new_norm(hit.pos + hit.normal * SHADOW_BIAS, glm::reflect_vec(&ray.dir, &hit.normal)),
             objects,
             lights,
             depth - 1,
-          ) * object.material.refl
+          ) * object.material.refl;
       } else {
-        object.material.color * total_intensity
+        ret = object.material.color * total_intensity;
       }
+
+      glm::clamp(&ret, 0.0, 1.0)
     }
   }
 }

@@ -1,11 +1,11 @@
-use crate::geom::{Ray, Vec3f};
+use crate::geom::Ray;
 use crate::lights::Light;
 use crate::objects::Sphere;
 use crate::rendering::{cast_ray, Color};
 use std::fs::File;
 use std::io::prelude::*;
 
-const ORIGIN: Vec3f = Vec3f { x: 0.0, y: 0.0, z: 0.0 };
+use glm::Vec3;
 
 pub struct Scene {
   // TODO: Separate objects
@@ -19,38 +19,43 @@ pub struct Scene {
   pub framebuffer: Vec<Vec<Color>>,
 
   // Camera
-  pub fov: f64,
+  pub fov: f32,
 
   // Rendering
   pub recursion_depth: u32,
 }
 
 impl Scene {
-  pub fn new(width: usize, height: usize, fov: f64, recursion_depth: u32) -> Self {
+  pub fn new(width: usize, height: usize, fov: f32, recursion_depth: u32) -> Self {
     Self {
       objects: Vec::new(),
       lights: Vec::new(),
       width,
       height,
-      framebuffer: vec![vec![Color::new(); width]; height],
+      framebuffer: vec![vec![glm::zero(); width]; height],
       fov,
       recursion_depth,
     }
   }
 
   pub fn update(&mut self) {
-    let aspect_ratio: f64 = (self.width as f64) / (self.height as f64);
+    let aspect_ratio: f32 = (self.width as f32) / (self.height as f32);
     let fov_adjustment = (self.fov.to_radians() / 2.0).tan();
     for i in 0..self.height {
       for j in 0..self.width {
-        let height_f = self.height as f64;
-        let width_f = self.width as f64;
-        let x: f64 = ((j as f64 + 0.5) / width_f * 2.0 - 1.0) * fov_adjustment * aspect_ratio;
-        let y: f64 = (1.0 - (i as f64 + 0.5) / height_f * 2.0) * fov_adjustment;
-        let dir = (Vec3f { x, y, z: 1.0 }).norm();
-        self.framebuffer[i][j] = cast_ray(Ray { orig: ORIGIN, dir }, &self.objects, &self.lights, self.recursion_depth);
+        let height_f = self.height as f32;
+        let width_f = self.width as f32;
+        let x: f32 = ((j as f32 + 0.5) / width_f * 2.0 - 1.0) * fov_adjustment * aspect_ratio;
+        let y: f32 = (1.0 - (i as f32 + 0.5) / height_f * 2.0) * fov_adjustment;
+        let dir = glm::normalize(&Vec3::new(x, y, 1.0));
+        self.framebuffer[i][j] = cast_ray(Ray { orig: glm::zero(), dir }, &self.objects, &self.lights, self.recursion_depth);
       }
     }
+  }
+
+  pub fn convert_color256(color: Color) -> String {
+    let ret: Vec3 = color * 255.0;
+    format!("{} {} {}", ret.x as u8, ret.y as u8, ret.z as u8)
   }
 
   pub fn render_to_ppm(&mut self, filename: &str) -> std::io::Result<()> {
@@ -64,7 +69,7 @@ impl Scene {
 
     for i in 0..self.height {
       for j in 0..self.width {
-        file.write(format!("{}\t", self.framebuffer[i][j]).as_bytes())?;
+        file.write(format!("{}\t", Scene::convert_color256(self.framebuffer[i][j])).as_bytes())?;
       }
       file.write(b"\n")?;
     }
