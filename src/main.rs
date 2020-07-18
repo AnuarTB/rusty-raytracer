@@ -10,6 +10,7 @@ use scene::Scene;
 
 mod geom;
 mod lights;
+mod obj;
 mod objects;
 mod rendering;
 mod scene;
