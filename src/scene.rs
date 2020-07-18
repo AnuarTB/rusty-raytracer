@@ -45,11 +45,7 @@ impl<'a> Scene {
   pub fn update(&mut self) {
     let aspect_ratio: f32 = (self.width as f32) / (self.height as f32);
     let fov_adjustment = (self.fov.to_radians() / 2.0).tan();
-    let look_at_mat = glm::look_at(
-      &self.camera_pos, 
-      &self.look_at, 
-      &Vec3::new(0.0, 1.0, 0.0)
-    );
+    let look_at_mat = glm::look_at(&self.camera_pos, &self.look_at, &Vec3::new(0.0, 1.0, 0.0));
 
     for i in 0..self.height {
       for j in 0..self.width {
