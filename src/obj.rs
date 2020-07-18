@@ -1,5 +1,7 @@
 use glm::{make_vec3, U32Vec3, Vec3};
 
+use crate::rendering::Material;
+
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
@@ -8,6 +10,7 @@ use std::io::{self, BufReader};
 struct Obj {
   vertices: Vec<Vec3>,
   faces: Vec<U32Vec3>,
+  material: Material,
 }
 
 impl Obj {
@@ -15,6 +18,7 @@ impl Obj {
     Obj {
       vertices: Vec::new(),
       faces: Vec::new(),
+      material: Material::new(),
     }
   }
 
@@ -56,7 +60,7 @@ mod tests {
   use glm::{equal, vec3};
 
   #[test]
-  fn print_obj() {
+  fn read_obj() {
     let obj = Obj::from_obj_file("assets/triangle.obj");
     assert!(obj.is_ok());
     let obj = obj.unwrap();

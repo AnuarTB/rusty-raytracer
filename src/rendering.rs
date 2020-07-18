@@ -33,14 +33,14 @@ impl Material {
   }
 }
 
-pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
-  let mut nearest: Option<(Hit, &Sphere)> = None;
+pub fn hit_object(ray: Ray, objects: &Vec<Box<dyn Hittable>>) -> Option<Hit> {
+  let mut nearest: Option<Hit> = None;
   for object in objects {
     match object.hit(ray) {
       None => continue,
       Some(hit) => {
-        if nearest.is_none() || hit.t < nearest.unwrap().0.t {
-          nearest = Some((hit, &object));
+        if nearest.is_none() || hit.t < nearest.unwrap().t {
+          nearest = Some(hit);
         }
       }
     }
@@ -48,34 +48,35 @@ pub fn hit_object(ray: Ray, objects: &Vec<Sphere>) -> Option<(Hit, &Sphere)> {
   nearest
 }
 
-pub fn cast_ray(ray: Ray, objects: &Vec<Sphere>, lights: &Vec<Light>, depth: u32) -> Color {
+pub fn cast_ray(ray: Ray, objects: &Vec<Box<dyn Hittable>>, lights: &Vec<Light>, depth: u32) -> Color {
   match hit_object(ray, objects) {
     None => *BACKGROUND_COLOR,
-    Some((hit, object)) => {
+    Some(hit) => {
       let mut total_intensity: f32 = 0.0;
       for light in lights {
         let in_shadow: bool = match light {
           Light::PointLight(l) => {
             let shadow_hit = hit_object(Ray::new_norm(hit.pos + (hit.normal * SHADOW_BIAS), l.pos - hit.pos), objects);
-            !(shadow_hit.is_none() || shadow_hit.unwrap().0.t > glm::length(&(l.pos - hit.pos)))
+            !(shadow_hit.is_none() || shadow_hit.unwrap().t > glm::length(&(l.pos - hit.pos)))
           }
           _ => false,
         };
         if !in_shadow {
-          total_intensity += light.total_reflection(object.material, hit);
+          // TODO: Maybe refactor to pass the reference instead of copy?
+          total_intensity += light.total_reflection(*hit.material, hit);
         }
       }
       let ret: Vec3;
-      if object.material.refl > 0.0 && depth > 0 {
-        ret = object.material.color * total_intensity * (1.0 - object.material.refl)
+      if hit.material.refl > 0.0 && depth > 0 {
+        ret = hit.material.color * total_intensity * (1.0 - hit.material.refl)
           + cast_ray(
             Ray::new_norm(hit.pos + hit.normal * SHADOW_BIAS, glm::reflect_vec(&ray.dir, &hit.normal)),
             objects,
             lights,
             depth - 1,
-          ) * object.material.refl;
+          ) * hit.material.refl;
       } else {
-        ret = object.material.color * total_intensity;
+        ret = hit.material.color * total_intensity;
       }
 
       glm::clamp(&ret, 0.0, 1.0)

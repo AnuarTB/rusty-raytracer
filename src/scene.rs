@@ -1,6 +1,6 @@
 use crate::geom::Ray;
 use crate::lights::Light;
-use crate::objects::Sphere;
+use crate::objects::Hittable;
 use crate::rendering::{cast_ray, Color};
 use std::fs::File;
 use std::io::prelude::*;
@@ -10,7 +10,7 @@ use glm::{Vec3, Vec4};
 pub struct Scene {
   // TODO: Separate objects
   // Scene objects
-  pub objects: Vec<Sphere>,
+  pub objects: Vec<Box<dyn Hittable>>,
   pub lights: Vec<Light>,
 
   // Viewport

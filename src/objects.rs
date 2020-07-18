@@ -5,10 +5,11 @@ use crate::rendering::Material;
 use glm::Vec3;
 
 #[derive(Debug, Clone, Copy)]
-pub struct Hit {
+pub struct Hit<'a> {
   pub normal: Vec3,
   pub pos: Vec3,
   pub t: f32,
+  pub material: &'a Material,
 }
 
 pub trait Hittable {
@@ -63,7 +64,12 @@ impl Hittable for Sphere {
       let normal = glm::normalize(&(ray.at(t) - self.center));
       let pos = ray.at(t);
 
-      Some(Hit { normal, pos, t })
+      Some(Hit {
+        normal,
+        pos,
+        t,
+        material: &self.material,
+      })
     }
   }
 }

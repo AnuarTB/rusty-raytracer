@@ -20,7 +20,7 @@ fn main() -> std::io::Result<()> {
   let mut scene = Scene::new(800, 800, 60.0, 2);
 
   // Scene setup
-  scene.objects.push(Sphere {
+  scene.objects.push(Box::new(Sphere {
     radius: 1.0,
     center: Vec3::new(-1.0, 0.0, 4.0),
     material: Material {
@@ -30,9 +30,9 @@ fn main() -> std::io::Result<()> {
       exp: 7.0,
       refl: 0.0,
     },
-  });
+  }));
 
-  scene.objects.push(Sphere {
+  scene.objects.push(Box::new(Sphere {
     radius: 1.0,
     center: Vec3::new(1.0, 1.0, 5.0),
     material: Material {
@@ -42,9 +42,9 @@ fn main() -> std::io::Result<()> {
       exp: 5.0,
       refl: 0.0,
     },
-  });
+  }));
 
-  scene.objects.push(Sphere {
+  scene.objects.push(Box::new(Sphere {
     radius: 1.0,
     center: Vec3::new(0.0, 2.5, 6.0),
     material: Material {
@@ -54,9 +54,9 @@ fn main() -> std::io::Result<()> {
       exp: 5.0,
       refl: 0.6,
     },
-  });
+  }));
 
-  scene.objects.push(Sphere {
+  scene.objects.push(Box::new(Sphere {
     radius: 0.6,
     center: Vec3::new(-1.5, 2.0, 4.0),
     material: Material {
@@ -66,9 +66,9 @@ fn main() -> std::io::Result<()> {
       exp: 4.0,
       refl: 0.8,
     },
-  });
+  }));
 
-  scene.objects.push(Sphere {
+  scene.objects.push(Box::new(Sphere {
     radius: 20.0,
     center: Vec3::new(1.0, -20.0, 10.0),
     material: Material {
@@ -78,7 +78,7 @@ fn main() -> std::io::Result<()> {
       exp: 0.0,
       refl: 0.0,
     },
-  });
+  }));
 
   scene.lights.push(Light::PointLight(PointLight {
     intensity: 1.0,
