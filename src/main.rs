@@ -4,6 +4,7 @@ extern crate lazy_static;
 
 use glm::Vec3;
 use lights::*;
+use obj::Obj;
 use objects::Sphere;
 use rendering::{Color, Material};
 use scene::Scene;
@@ -17,7 +18,7 @@ mod scene;
 
 fn main() -> std::io::Result<()> {
   // Initialize variables and constants
-  let mut scene = Scene::new(800, 800, 60.0, 2);
+  let mut scene = Scene::new(800, 800, 60.0, 1);
 
   // Scene setup
   scene.objects.push(Box::new(Sphere {
@@ -79,6 +80,18 @@ fn main() -> std::io::Result<()> {
       refl: 0.0,
     },
   }));
+
+  let mut obj = Obj::from_obj_file("assets/teapot.obj").unwrap();
+  obj.translation = Vec3::new(1.0, -0.2, 4.0);
+  obj.scale = Vec3::new(0.4, 0.4, 0.4);
+  obj.material = Material {
+    color: Color::new(0.2, 0.9, 0.2),
+    diffuse_coeff: 1.0,
+    specular_coeff: 0.0,
+    exp: 0.0,
+    refl: 0.0,
+  };
+  scene.objects.push(Box::new(obj));
 
   scene.lights.push(Light::PointLight(PointLight {
     intensity: 1.0,
