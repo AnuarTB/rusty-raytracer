@@ -6,17 +6,18 @@ use std::fs::File;
 use std::io::prelude::*;
 
 use glm::{Vec3, Vec4};
+use rayon::prelude::*;
 
 pub struct Scene {
   // TODO: Separate objects
   // Scene objects
-  pub objects: Vec<Box<dyn Hittable>>,
+  pub objects: Vec<Box<dyn Hittable + Send + Sync>>,
   pub lights: Vec<Light>,
 
   // Viewport
   pub width: usize,
   pub height: usize,
-  pub framebuffer: Vec<Vec<Color>>,
+  pub framebuffer: Vec<Color>,
 
   // Camera
   pub fov: f32,
@@ -34,7 +35,7 @@ impl<'a> Scene {
       lights: Vec::new(),
       width,
       height,
-      framebuffer: vec![vec![glm::zero(); width]; height],
+      framebuffer: vec![glm::zero(); width * height],
       fov,
       camera_pos: glm::zero(),
       look_at: Vec3::new(0.0, 0.0, 1.0),
@@ -47,16 +48,22 @@ impl<'a> Scene {
     let fov_adjustment = (self.fov.to_radians() / 2.0).tan();
     let look_at_mat = glm::look_at(&self.camera_pos, &self.look_at, &Vec3::new(0.0, 1.0, 0.0));
 
-    for i in 0..self.height {
-      for j in 0..self.width {
-        let height_f = self.height as f32;
-        let width_f = self.width as f32;
-        let x: f32 = ((j as f32 + 0.5) / width_f * 2.0 - 1.0) * fov_adjustment * aspect_ratio;
+    let cartesian = (0..self.height)
+      .flat_map(|y| (0..self.width).clone().map(move |x| (y, x)))
+      .collect::<Vec<(usize, usize)>>()
+      .into_par_iter();
+
+    let height_f = self.height as f32;
+    let width_f = self.width as f32;
+
+    self.framebuffer = cartesian
+      .map(|(i, j)| {
+        let x: f32 = (1.0 - (j as f32 + 0.5) / width_f * 2.0) * fov_adjustment * aspect_ratio;
         let y: f32 = (1.0 - (i as f32 + 0.5) / height_f * 2.0) * fov_adjustment;
 
         let dir = glm::vec4_to_vec3(&(look_at_mat * Vec4::new(x, y, -1.0, 1.0)));
 
-        self.framebuffer[i][j] = cast_ray(
+        cast_ray(
           Ray {
             orig: self.camera_pos,
             dir,
@@ -64,9 +71,9 @@ impl<'a> Scene {
           &self.objects,
           &self.lights,
           self.recursion_depth,
-        );
-      }
-    }
+        )
+      })
+      .collect();
   }
 
   pub fn convert_color256(color: Color) -> String {
@@ -83,11 +90,8 @@ impl<'a> Scene {
     file.write(format!("{} {}\n", &self.width, &self.height).as_bytes())?;
     file.write(b"255\n")?;
 
-    for i in 0..self.height {
-      for j in 0..self.width {
-        file.write(format!("{}\t", Scene::convert_color256(self.framebuffer[i][j])).as_bytes())?;
-      }
-      file.write(b"\n")?;
+    for i in 0..(self.height * self.width) {
+      file.write(format!("{}\n", Scene::convert_color256(self.framebuffer[i])).as_bytes())?;
     }
 
     Ok(())

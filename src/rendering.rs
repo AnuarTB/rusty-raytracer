@@ -33,7 +33,7 @@ impl Material {
   }
 }
 
-pub fn hit_object(ray: Ray, objects: &Vec<Box<dyn Hittable>>) -> Option<Hit> {
+pub fn hit_object(ray: Ray, objects: &Vec<Box<dyn Hittable + Send + Sync>>) -> Option<Hit> {
   let mut nearest: Option<Hit> = None;
   for object in objects {
     match object.hit(ray) {
@@ -48,7 +48,7 @@ pub fn hit_object(ray: Ray, objects: &Vec<Box<dyn Hittable>>) -> Option<Hit> {
   nearest
 }
 
-pub fn cast_ray(ray: Ray, objects: &Vec<Box<dyn Hittable>>, lights: &Vec<Light>, depth: u32) -> Color {
+pub fn cast_ray(ray: Ray, objects: &Vec<Box<dyn Hittable + Send + Sync>>, lights: &Vec<Light>, depth: u32) -> Color {
   match hit_object(ray, objects) {
     None => *BACKGROUND_COLOR,
     Some(hit) => {
