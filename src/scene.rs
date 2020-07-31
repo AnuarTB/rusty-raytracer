@@ -2,6 +2,7 @@ use crate::geom::Ray;
 use crate::lights::Light;
 use crate::objects::Hittable;
 use crate::rendering::{cast_ray, Color};
+use rand::{thread_rng, Rng};
 use std::fs::File;
 use std::io::prelude::*;
 
@@ -58,20 +59,25 @@ impl<'a> Scene {
 
     self.framebuffer = cartesian
       .map(|(i, j)| {
-        let x: f32 = (1.0 - (j as f32 + 0.5) / width_f * 2.0) * fov_adjustment * aspect_ratio;
-        let y: f32 = (1.0 - (i as f32 + 0.5) / height_f * 2.0) * fov_adjustment;
+        let NUM_SAMPLES = 30;
+        let mut total: Color = glm::zero();
+        let mut rng = thread_rng();
 
-        let dir = glm::vec4_to_vec3(&(look_at_mat * Vec4::new(x, y, -1.0, 1.0)));
-
-        cast_ray(
-          Ray {
-            orig: self.camera_pos,
-            dir,
-          },
-          &self.objects,
-          &self.lights,
-          self.recursion_depth,
-        )
+        for _ in 0..NUM_SAMPLES {
+          let x: f32 = (1.0 - (j as f32 + 0.5 + rng.gen::<f32>()) / width_f * 2.0) * fov_adjustment * aspect_ratio;
+          let y: f32 = (1.0 - (i as f32 + 0.5 + rng.gen::<f32>()) / height_f * 2.0) * fov_adjustment;
+          let dir = glm::vec4_to_vec3(&(look_at_mat * Vec4::new(x, y, -1.0, 1.0)));
+          total += cast_ray(
+            Ray {
+              orig: self.camera_pos,
+              dir,
+            },
+            &self.objects,
+            &self.lights,
+            self.recursion_depth,
+          );
+        }
+        total * (1.0 / (NUM_SAMPLES as f32))
       })
       .collect();
   }
