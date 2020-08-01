@@ -12,13 +12,25 @@ lazy_static! {
 
 const SHADOW_BIAS: f32 = 1e-4;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Builder)]
 pub struct Material {
   pub color: Color,
   pub diffuse_coeff: f32,
   pub specular_coeff: f32,
   pub exp: f32,
   pub refl: f32,
+}
+
+impl Default for Material {
+  fn default() -> Self {
+    Material {
+      color: Color::new(1.0, 1.0, 1.0),
+      diffuse_coeff: 0.0,
+      specular_coeff: 0.0,
+      exp: 0.0,
+      refl: 0.0,
+    }
+  }
 }
 
 impl Material {

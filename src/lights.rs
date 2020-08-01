@@ -2,20 +2,24 @@ use crate::objects::Hit;
 use crate::rendering::Material;
 use glm::Vec3;
 
+#[derive(Debug, Copy, Clone)]
 pub struct PointLight {
   pub intensity: f32,
   pub pos: Vec3,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct DirectionalLight {
   pub intensity: f32,
   pub dir: Vec3,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub struct AmbientLight {
   pub intensity: f32,
 }
 
+#[derive(Debug, Copy, Clone)]
 pub enum Light {
   PointLight(PointLight),
   DirectionalLight(DirectionalLight),

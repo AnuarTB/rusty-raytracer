@@ -8,7 +8,7 @@ use std::io::prelude::*;
 
 use glm::{Vec3, Vec4};
 use rayon::prelude::*;
-
+#[derive(Builder, Debug, Clone, Copy)]
 pub struct Camera {
   pub fov: f32,
   pub camera_pos: Vec3,
@@ -27,15 +27,21 @@ impl Camera {
   }
 }
 
+#[derive(Builder)]
 pub struct Scene {
   // TODO: Separate objects
   // Scene objects
+  #[builder(setter(skip))]
   pub objects: Vec<Box<dyn Hittable + Send + Sync>>,
+
+  #[builder(setter(skip))]
   pub lights: Vec<Light>,
 
   // Viewport
   pub width: usize,
   pub height: usize,
+
+  #[builder(setter(skip))]
   pub framebuffer: Vec<Color>,
 
   // Camera
@@ -45,19 +51,21 @@ pub struct Scene {
   pub recursion_depth: u32,
 }
 
-impl<'a> Scene {
-  pub fn new(width: usize, height: usize, fov: f32, recursion_depth: u32) -> Self {
+impl Default for Scene {
+  fn default() -> Self {
     Self {
       objects: Vec::new(),
       lights: Vec::new(),
-      width,
-      height,
-      framebuffer: vec![glm::zero(); width * height],
-      camera: Camera::new(fov, glm::zero(), Vec3::new(0.0, 0.0, 1.0), 30),
-      recursion_depth,
+      width: 800,
+      height: 800,
+      framebuffer: vec![glm::zero(); 800 * 800],
+      camera: Camera::new(60.0, glm::zero(), Vec3::new(0.0, 0.0, 1.0), 30),
+      recursion_depth: 1,
     }
   }
+}
 
+impl<'a> Scene {
   pub fn update(&mut self) {
     let aspect_ratio: f32 = (self.width as f32) / (self.height as f32);
     let fov_adjustment = (self.camera.fov.to_radians() / 2.0).tan();

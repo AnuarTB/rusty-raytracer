@@ -8,7 +8,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Obj {
   vertices: Vec<Vec3>,
   faces: Vec<U32Vec3>,

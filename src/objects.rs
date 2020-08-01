@@ -17,19 +17,19 @@ pub trait Hittable {
   fn hit(&self, ray: Ray) -> Option<Hit>;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, Builder)]
 pub struct Sphere {
   pub radius: f32,
   pub center: Vec3,
   pub material: Material,
 }
 
-impl Sphere {
-  pub fn new() -> Self {
+impl Default for Sphere {
+  fn default() -> Self {
     Sphere {
       radius: 0.0,
       center: glm::zero(),
-      material: Material::new(),
+      material: Material::default(),
     }
   }
 }
