@@ -15,9 +15,17 @@ const SHADOW_BIAS: f32 = 1e-4;
 #[derive(Debug, Clone, Copy, Builder)]
 pub struct Material {
   pub color: Color,
+
+  #[builder(default = "0.0")]
   pub diffuse_coeff: f32,
+
+  #[builder(default = "0.0")]
   pub specular_coeff: f32,
+
+  #[builder(default = "0.0")]
   pub exp: f32,
+
+  #[builder(default = "0.0")]
   pub refl: f32,
 }
 

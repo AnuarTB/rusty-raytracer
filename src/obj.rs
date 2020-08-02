@@ -8,14 +8,60 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 
-#[derive(Debug, Clone)]
+#[derive(Builder, Debug, Clone)]
 pub struct Obj {
   vertices: Vec<Vec3>,
   faces: Vec<U32Vec3>,
   pub material: Material,
+
+  #[builder(default = "glm::zero()")]
   pub translation: Vec3,
+
+  #[builder(default = "glm::zero()")]
   pub scale: Vec3,
+
+  #[builder(default = "glm::zero()")]
   pub rotation: Quat,
+}
+
+impl ObjBuilder {
+  pub fn from_obj(&mut self, filename: &str) -> Result<&mut Self, io::Error> {
+    let f = File::open(filename)?;
+    let f = BufReader::new(f);
+
+    let mut faces = Vec::new();
+    let mut vertices = Vec::new();
+
+    for line in f.lines() {
+      let line = line.unwrap();
+      if line.is_empty() {
+        continue;
+      }
+      let mut tokens = line.split_whitespace();
+      match tokens.next().unwrap() {
+        "v" => {
+          let vertex: Vec3 = glm::make_vec3(tokens.map(|x| x.parse::<f32>().unwrap()).collect::<Vec<f32>>().as_slice());
+
+          vertices.push(vertex);
+        }
+        "f" => {
+          let face: U32Vec3 = glm::make_vec3(
+            tokens
+              .map(|x| x.parse::<u32>().unwrap() - 1) // Indentation in faces starts with 1
+              .collect::<Vec<u32>>()
+              .as_slice(),
+          );
+
+          faces.push(face);
+        }
+        _ => println!("Unexpected token"),
+      }
+    }
+    self.faces = Some(faces);
+    self.vertices = Some(vertices);
+
+    Ok(self)
+  }
 }
 
 impl Obj {

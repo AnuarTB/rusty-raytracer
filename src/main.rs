@@ -6,7 +6,7 @@ extern crate derive_builder;
 
 use glm::Vec3;
 use lights::*;
-use obj::Obj;
+use obj::ObjBuilder;
 use objects::Sphere;
 use rendering::{Color, Material, MaterialBuilder};
 use scene::{CameraBuilder, SceneBuilder};
@@ -24,7 +24,7 @@ fn main() -> std::io::Result<()> {
     .fov(60.0)
     .camera_pos(glm::zero())
     .look_at(Vec3::new(0.0, 0.0, 1.0))
-    .num_samples(30)
+    .num_samples(10)
     .build()
     .unwrap();
 
@@ -53,8 +53,14 @@ fn main() -> std::io::Result<()> {
     .build()
     .unwrap();
 
-  let mat_ground = MaterialBuilder::default()
+  let mat_diffuse1 = MaterialBuilder::default()
     .color(Color::new(0.5, 0.0, 0.5))
+    .diffuse_coeff(1.0)
+    .build()
+    .unwrap();
+
+  let mat_diffuse2 = MaterialBuilder::default()
+    .color(Color::new(0.2, 0.9, 0.2))
     .diffuse_coeff(1.0)
     .build()
     .unwrap();
@@ -98,21 +104,20 @@ fn main() -> std::io::Result<()> {
   scene.objects.push(Box::new(Sphere {
     radius: 20.0,
     center: Vec3::new(1.0, -20.0, 10.0),
-    material: mat_ground,
+    material: mat_diffuse1,
   }));
-  /*
-  let mut obj = Obj::from_obj_file("assets/teapot.obj").unwrap();
-  obj.translation = Vec3::new(1.0, -0.2, 4.0);
-  obj.scale = Vec3::new(0.4, 0.4, 0.4);
-  obj.material = Material {
-    color: Color::new(0.2, 0.9, 0.2),
-    diffuse_coeff: 1.0,
-    specular_coeff: 0.0,
-    exp: 0.0,
-    refl: 0.0,
-  };
+
+  let obj = ObjBuilder::default()
+    .from_obj("assets/cube.obj")
+    .unwrap()
+    .translation(Vec3::new(1.0, -0.2, 4.0))
+    .scale(Vec3::new(0.4, 0.4, 0.4))
+    .material(mat_diffuse2)
+    .build()
+    .unwrap();
+
   scene.objects.push(Box::new(obj));
-  */
+
   scene.lights.push(Light::PointLight(PointLight {
     intensity: 1.0,
     pos: Vec3::new(0.0, 8.0, 4.0),
