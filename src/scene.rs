@@ -8,6 +8,7 @@ use std::io::prelude::*;
 
 use glm::{Vec3, Vec4};
 use rayon::prelude::*;
+
 #[derive(Builder, Debug, Clone, Copy)]
 pub struct Camera {
   pub fov: f32,
@@ -48,6 +49,7 @@ pub struct Scene {
   pub camera: Camera,
 
   // Rendering
+  #[builder(default = "0")]
   pub recursion_depth: u32,
 }
 

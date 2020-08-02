@@ -25,47 +25,20 @@ pub struct Obj {
 }
 
 impl ObjBuilder {
-  pub fn from_obj(&mut self, filename: &str) -> Result<&mut Self, io::Error> {
-    let f = File::open(filename)?;
-    let f = BufReader::new(f);
-
-    let mut faces = Vec::new();
-    let mut vertices = Vec::new();
-
-    for line in f.lines() {
-      let line = line.unwrap();
-      if line.is_empty() {
-        continue;
+  pub fn from_obj_file(&mut self, filename: &str) -> &mut Self {
+    match parse_obj(filename) {
+      Ok((vertices, faces)) => {
+        self.vertices = Some(vertices);
+        self.faces = Some(faces);
+        self
       }
-      let mut tokens = line.split_whitespace();
-      match tokens.next().unwrap() {
-        "v" => {
-          let vertex: Vec3 = glm::make_vec3(tokens.map(|x| x.parse::<f32>().unwrap()).collect::<Vec<f32>>().as_slice());
-
-          vertices.push(vertex);
-        }
-        "f" => {
-          let face: U32Vec3 = glm::make_vec3(
-            tokens
-              .map(|x| x.parse::<u32>().unwrap() - 1) // Indentation in faces starts with 1
-              .collect::<Vec<u32>>()
-              .as_slice(),
-          );
-
-          faces.push(face);
-        }
-        _ => println!("Unexpected token"),
-      }
+      Err(e) => panic!("Can't read from {}, err: {}", filename, e),
     }
-    self.faces = Some(faces);
-    self.vertices = Some(vertices);
-
-    Ok(self)
   }
 }
 
-impl Obj {
-  pub fn new() -> Self {
+impl Default for Obj {
+  fn default() -> Self {
     Obj {
       vertices: Vec::new(),
       faces: Vec::new(),
@@ -75,43 +48,19 @@ impl Obj {
       rotation: glm::quat_identity(),
     }
   }
+}
 
-  pub fn from_obj_file(filename: &str) -> Result<Self, io::Error> {
-    let f = File::open(filename)?;
-    let f = BufReader::new(f);
-
-    let mut ret_obj = Self::new();
-
-    for line in f.lines() {
-      let line = line.unwrap();
-      if line.is_empty() {
-        continue;
+impl Obj {
+  pub fn from_obj_file(filename: &str) -> Self {
+    let mut ret_obj = Self::default();
+    match parse_obj(filename) {
+      Ok((vertices, faces)) => {
+        ret_obj.vertices = vertices;
+        ret_obj.faces = faces;
+        ret_obj
       }
-      let mut tokens = line.split_whitespace();
-      match tokens.next().unwrap() {
-        "v" => {
-          let vertex: Vec3 = glm::make_vec3(tokens.map(|x| x.parse::<f32>().unwrap()).collect::<Vec<f32>>().as_slice());
-
-          ret_obj.vertices.push(vertex);
-        }
-        "f" => {
-          let face: U32Vec3 = glm::make_vec3(
-            tokens
-              .map(|x| x.parse::<u32>().unwrap() - 1) // Indentation in faces starts with 1
-              .collect::<Vec<u32>>()
-              .as_slice(),
-          );
-
-          ret_obj.faces.push(face);
-        }
-        _ => println!("Unexpected token"),
-      }
+      Err(e) => panic!("Can't read from {}, err: {}", filename, e),
     }
-
-    // println!("{}", ret_obj.vertices.len());
-    // println!("{}", ret_obj.faces.len());
-
-    Ok(ret_obj)
   }
 
   pub fn transform_vec(&self, v: Vec3) -> Vec3 {
@@ -130,8 +79,6 @@ mod tests {
   #[test]
   fn read_obj() {
     let obj = Obj::from_obj_file("assets/triangle.obj");
-    assert!(obj.is_ok());
-    let obj = obj.unwrap();
 
     assert_eq!(vec3(true, true, true), equal(&obj.vertices[0], &vec3(1.0, 1.0, 0.0)));
     assert_eq!(vec3(true, true, true), equal(&obj.vertices[1], &vec3(1.0, 0.0, 0.0)));
@@ -139,6 +86,42 @@ mod tests {
 
     assert_eq!(vec3(0, 1, 2), obj.faces[0]);
   }
+}
+
+fn parse_obj(filename: &str) -> Result<(Vec<Vec3>, Vec<U32Vec3>), io::Error> {
+  let f = File::open(filename)?;
+  let f = BufReader::new(f);
+
+  let mut faces = Vec::new();
+  let mut vertices = Vec::new();
+
+  for line in f.lines() {
+    let line = line.unwrap();
+    if line.is_empty() {
+      continue;
+    }
+    let mut tokens = line.split_whitespace();
+    match tokens.next().unwrap() {
+      "v" => {
+        let vertex: Vec3 = glm::make_vec3(tokens.map(|x| x.parse::<f32>().unwrap()).collect::<Vec<f32>>().as_slice());
+
+        vertices.push(vertex);
+      }
+      "f" => {
+        let face: U32Vec3 = glm::make_vec3(
+          tokens
+            .map(|x| x.parse::<u32>().unwrap() - 1) // Indentation in faces starts with 1
+            .collect::<Vec<u32>>()
+            .as_slice(),
+        );
+
+        faces.push(face);
+      }
+      _ => println!("Unexpected token"),
+    }
+  }
+
+  Ok((vertices, faces))
 }
 
 // @returns: ray's t and normal of triangle
