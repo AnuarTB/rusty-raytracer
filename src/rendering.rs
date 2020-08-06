@@ -56,11 +56,13 @@ impl Material {
 pub fn hit_object(ray: Ray, objects: &Vec<Box<dyn Hittable + Send + Sync>>) -> Option<Hit> {
   let mut nearest: Option<Hit> = None;
   for object in objects {
-    match object.hit(ray) {
-      None => continue,
-      Some(hit) => {
-        if nearest.is_none() || hit.t < nearest.unwrap().t {
-          nearest = Some(hit);
+    if object.aabb(ray) {
+      match object.hit(ray) {
+        None => continue,
+        Some(hit) => {
+          if nearest.is_none() || hit.t < nearest.unwrap().t {
+            nearest = Some(hit);
+          }
         }
       }
     }

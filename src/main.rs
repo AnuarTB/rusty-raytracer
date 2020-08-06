@@ -24,7 +24,7 @@ fn main() -> std::io::Result<()> {
     .fov(60.0)
     .camera_pos(glm::zero())
     .look_at(Vec3::new(0.0, 0.0, 1.0))
-    .num_samples(30)
+    .num_samples(5)
     .build()
     .unwrap();
 
@@ -108,7 +108,7 @@ fn main() -> std::io::Result<()> {
   }));
 
   let obj = ObjBuilder::default()
-    .from_obj_file("assets/cube.obj")
+    .from_obj_file("assets/teapot.obj")
     .translation(Vec3::new(1.0, -0.2, 4.0))
     .scale(Vec3::new(0.4, 0.4, 0.4))
     .material(mat_diffuse2)

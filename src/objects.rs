@@ -12,9 +12,30 @@ pub struct Hit<'a> {
   pub material: &'a Material,
 }
 
+#[derive(Debug, Clone, Copy)]
+pub struct AABB {
+  pub mn: Vec3,
+  pub mx: Vec3,
+}
+
+impl Default for AABB {
+  fn default() -> Self {
+    Self {
+      mn: glm::zero(),
+      mx: glm::zero(),
+    }
+  }
+}
+
 pub trait Hittable {
   // Return Hit object if the object was hitted by ray.
   fn hit(&self, ray: Ray) -> Option<Hit>;
+
+  fn update_bbox(&mut self) {}
+
+  fn aabb(&self, ray: Ray) -> bool {
+    true
+  }
 }
 
 #[derive(Debug, Clone, Copy, Builder)]

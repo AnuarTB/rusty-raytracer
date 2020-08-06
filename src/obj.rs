@@ -1,9 +1,10 @@
 use glm::{Quat, U32Vec3, Vec3};
 
 use crate::geom::Ray;
-use crate::objects::{Hit, Hittable};
+use crate::objects::{Hit, Hittable, AABB};
 use crate::rendering::Material;
 
+use std::mem::swap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
@@ -22,6 +23,9 @@ pub struct Obj {
 
   #[builder(default = "glm::zero()")]
   pub rotation: Quat,
+
+  #[builder(default = "AABB::default()")]
+  pub aabb: AABB,
 }
 
 impl ObjBuilder {
@@ -46,6 +50,7 @@ impl Default for Obj {
       translation: glm::zero(),
       scale: Vec3::new(1.0, 1.0, 1.0),
       rotation: glm::quat_identity(),
+      aabb: AABB::default(),
     }
   }
 }
@@ -57,6 +62,7 @@ impl Obj {
       Ok((vertices, faces)) => {
         ret_obj.vertices = vertices;
         ret_obj.faces = faces;
+        ret_obj.update_bbox();
         ret_obj
       }
       Err(e) => panic!("Can't read from {}, err: {}", filename, e),
@@ -180,4 +186,64 @@ impl Hittable for Obj {
       }),
     }
   }
+
+  fn update_bbox(&mut self) {
+    for vertex in &self.vertices {
+      self.aabb.mn = glm::min2(&self.aabb.mn, &vertex);
+      self.aabb.mx = glm::min2(&self.aabb.mx, &vertex);
+    }
+  }
+
+  fn aabb(&self, ray: Ray) -> bool {
+    aabb_hit(self.aabb, ray)
+  }
+}
+
+fn aabb_hit(aabb: AABB, ray: Ray) -> bool {
+  let mut tmin = (aabb.mn.x - ray.orig.x) / ray.dir.x;
+  let mut tmax = (aabb.mx.x - ray.orig.x) / ray.dir.x;
+
+  if tmin > tmax {
+    swap(&mut tmin, &mut tmax);
+  }
+
+  let mut tymin = (aabb.mn.y - ray.orig.y) / ray.dir.y;
+  let mut tymax = (aabb.mx.y - ray.orig.y) / ray.dir.y;
+
+  if tymin > tymax {
+    swap(&mut tymin, &mut tymax);
+  }
+
+  if tmin > tymax || tymin > tmax {
+    return false;
+  }
+
+  if tymin > tmin {
+    tmin = tymin;
+  }
+
+  if tymax < tmax {
+    tmax = tymax;
+  }
+
+  let mut tzmin = (aabb.mn.z - ray.orig.z) / ray.dir.z;
+  let mut tzmax = (aabb.mx.z - ray.orig.z) / ray.dir.z;
+
+  if tzmin > tzmax {
+    swap(&mut tzmin, &mut tzmax);
+  }
+
+  if tmin > tzmax || tzmin > tmax {
+    return false;
+  }
+
+  if tzmin > tmin {
+    tmin = tymin;
+  }
+
+  if tzmax < tmax {
+    tmax = tymax;
+  }
+
+  true
 }
