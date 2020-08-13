@@ -4,15 +4,19 @@ use crate::geom::Ray;
 use crate::objects::{Hit, Hittable, AABB};
 use crate::rendering::Material;
 
-use std::mem::swap;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::{self, BufReader};
+use std::mem::swap;
 
 #[derive(Builder, Debug, Clone)]
 pub struct Obj {
-  vertices: Vec<Vec3>,
+  pub vertices: Vec<Vec3>,
   faces: Vec<U32Vec3>,
+
+  #[builder(default = "Vec::new()")]
+  normals: Vec<Vec3>,
+
   pub material: Material,
 
   #[builder(default = "glm::zero()")]
@@ -46,6 +50,7 @@ impl Default for Obj {
     Obj {
       vertices: Vec::new(),
       faces: Vec::new(),
+      normals: Vec::new(),
       material: Material::new(),
       translation: glm::zero(),
       scale: Vec3::new(1.0, 1.0, 1.0),
@@ -63,6 +68,7 @@ impl Obj {
         ret_obj.vertices = vertices;
         ret_obj.faces = faces;
         ret_obj.update_bbox();
+        ret_obj.compute_normals();
         ret_obj
       }
       Err(e) => panic!("Can't read from {}, err: {}", filename, e),
@@ -75,6 +81,16 @@ impl Obj {
     transform = glm::scale(&transform, &self.scale);
     let v = glm::quat_rotate_vec3(&self.rotation, &v);
     glm::vec4_to_vec3(&(transform * glm::vec4(v.x, v.y, v.z, 1.0)))
+  }
+
+  pub fn compute_normals(&mut self) {
+    for face in &self.faces {
+      self.normals.push(glm::triangle_normal(
+        &self.vertices[face.x as usize],
+        &self.vertices[face.y as usize],
+        &self.vertices[face.z as usize],
+      ));
+    }
   }
 }
 
@@ -130,11 +146,7 @@ fn parse_obj(filename: &str) -> Result<(Vec<Vec3>, Vec<U32Vec3>), io::Error> {
   Ok((vertices, faces))
 }
 
-// @returns: ray's t and normal of triangle
-fn hit_triangle(ray: Ray, a: Vec3, b: Vec3, c: Vec3) -> Option<(f32, Vec3)> {
-  // 1. Construct a plane from this triangle
-  let n = glm::triangle_normal(&a, &b, &c);
-
+fn hit_triangle_with_norm(ray: Ray, a: Vec3, b: Vec3, c: Vec3, n: Vec3) -> Option<(f32, Vec3)> {
   // 2. Intersect ray with the plane
   let t = Vec3::dot(&n, &(a - ray.orig)) / Vec3::dot(&n, &ray.dir);
   if t < 0.0 {
@@ -159,16 +171,24 @@ fn hit_triangle(ray: Ray, a: Vec3, b: Vec3, c: Vec3) -> Option<(f32, Vec3)> {
   }
 }
 
+// @returns: ray's t and normal of triangle
+fn hit_triangle(ray: Ray, a: Vec3, b: Vec3, c: Vec3) -> Option<(f32, Vec3)> {
+  // 1. Construct a plane from this triangle
+  let n = glm::triangle_normal(&a, &b, &c);
+  hit_triangle_with_norm(ray, a, b, c, n)
+}
+
 impl Hittable for Obj {
   fn hit(&self, ray: Ray) -> Option<Hit> {
     let mut nearest: Option<(f32, Vec3)> = None;
 
-    for face in &self.faces {
-      let t = hit_triangle(
+    for (i, face) in self.faces.iter().enumerate() {
+      let t = hit_triangle_with_norm(
         ray,
         self.transform_vec(self.vertices[face.x as usize]),
         self.transform_vec(self.vertices[face.y as usize]),
         self.transform_vec(self.vertices[face.z as usize]),
+        self.normals[i],
       );
 
       if t.is_some() && (nearest.is_none() || nearest.unwrap().0 > t.unwrap().0) {
@@ -189,8 +209,8 @@ impl Hittable for Obj {
 
   fn update_bbox(&mut self) {
     for vertex in &self.vertices {
-      self.aabb.mn = glm::min2(&self.aabb.mn, &vertex);
-      self.aabb.mx = glm::min2(&self.aabb.mx, &vertex);
+      self.aabb.mn = glm::min2(&self.aabb.mn, &self.transform_vec(*vertex));
+      self.aabb.mx = glm::max2(&self.aabb.mx, &self.transform_vec(*vertex));
     }
   }
 

@@ -7,7 +7,7 @@ extern crate derive_builder;
 use glm::Vec3;
 use lights::*;
 use obj::ObjBuilder;
-use objects::Sphere;
+use objects::{Hittable, Sphere};
 use rendering::{Color, Material, MaterialBuilder};
 use scene::{CameraBuilder, SceneBuilder};
 
@@ -107,13 +107,16 @@ fn main() -> std::io::Result<()> {
     material: mat_diffuse1,
   }));
 
-  let obj = ObjBuilder::default()
+  let mut obj = ObjBuilder::default()
     .from_obj_file("assets/teapot.obj")
     .translation(Vec3::new(1.0, -0.2, 4.0))
     .scale(Vec3::new(0.4, 0.4, 0.4))
     .material(mat_diffuse2)
     .build()
     .unwrap();
+
+  obj.update_bbox();
+  obj.compute_normals();
 
   scene.objects.push(Box::new(obj));
 
