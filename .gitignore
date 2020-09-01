@@ -1,1 +1,5 @@
 /target
+/renders
+
+dist
+node_modules

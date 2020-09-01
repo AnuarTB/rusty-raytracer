@@ -1,86 +1,139 @@
-use std::fmt;
-use std::fs::File;
-use std::io::prelude::*;
+extern crate nalgebra_glm as glm;
+#[macro_use]
+extern crate lazy_static;
+#[macro_use]
+extern crate derive_builder;
+
+use glm::Vec3;
+use lights::*;
+use obj::ObjBuilder;
+use objects::{Hittable, Sphere};
+use rendering::{Color, Material, MaterialBuilder};
+use scene::{CameraBuilder, SceneBuilder};
 
 mod geom;
+mod lights;
+mod obj;
+mod objects;
+mod rendering;
 mod scene;
 
-#[derive(Debug, Default, Copy, Clone)]
-pub struct Color {
-  r: u8,
-  g: u8,
-  b: u8,
-}
-
-impl Color {
-  fn new() -> Color {
-    Color { r: 0, g: 0, b: 0 }
-  }
-}
-
-impl fmt::Display for Color {
-  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-    write!(f, "{} {} {}", self.r, self.g, self.b)
-  }
-}
-
-fn cast_ray(orig: geom::Vec3, ray: geom::Vec3, objects: &Vec<scene::Sphere>) -> Color {
-  let mut nearest_dist: f64 = f64::INFINITY;
-  let mut color_ret = Color { r: 255, g: 255, b: 255 };
-  for object in objects {
-    let hit = object.intersect(orig, ray);
-    match hit {
-      None => continue,
-      Some(hit_t) => {
-        if geom::fcmp::smlr(hit_t, nearest_dist) {
-          nearest_dist = hit_t;
-          color_ret = object.color;
-        }
-      }
-    }
-  }
-  color_ret
-}
-
 fn main() -> std::io::Result<()> {
-  // Initialize variables and constants
-  const WIDTH: usize = 600;
-  const HEIGHT: usize = 600;
+  // Scene parameters
+  let camera = CameraBuilder::default()
+    .fov(60.0)
+    .camera_pos(glm::zero())
+    .look_at(Vec3::new(0.0, 0.0, 1.0))
+    .num_samples(5)
+    .build()
+    .unwrap();
 
-  let mut mat = vec![vec![Color::new(); WIDTH]; HEIGHT];
-  let mut objects = Vec::new();
-  let origin = geom::Vec3::new();
+  let mut scene = SceneBuilder::default()
+    .height(800 as usize)
+    .width(800 as usize)
+    .camera(camera)
+    .recursion_depth(1)
+    .build()
+    .unwrap();
 
-  // Scene setup
-  objects.push(scene::Sphere {
+  // Assets setup
+  let mat_mirror1 = MaterialBuilder::default()
+    .color(Color::new(0.05, 0.75, 0.05))
+    .diffuse_coeff(0.7)
+    .exp(5.0)
+    .refl(0.6)
+    .build()
+    .unwrap();
+
+  let mat_mirror2 = MaterialBuilder::default()
+    .color(Color::new(0.0, 0.5, 0.5))
+    .diffuse_coeff(0.4)
+    .exp(4.0)
+    .refl(0.8)
+    .build()
+    .unwrap();
+
+  let mat_diffuse1 = MaterialBuilder::default()
+    .color(Color::new(0.5, 0.0, 0.5))
+    .diffuse_coeff(1.0)
+    .build()
+    .unwrap();
+
+  let mat_diffuse2 = MaterialBuilder::default()
+    .color(Color::new(0.2, 0.9, 0.2))
+    .diffuse_coeff(1.0)
+    .build()
+    .unwrap();
+
+  scene.objects.push(Box::new(Sphere {
     radius: 1.0,
-    center: geom::Vec3 { x: 0.0, y: 0.0, z: 3.0 },
-    color: Color { r: 255, g: 0, b: 0 },
-  });
+    center: Vec3::new(-1.0, 0.0, 4.0),
+    material: Material {
+      color: Color::new(0.8, 0.0, 0.0),
+      diffuse_coeff: 0.7,
+      specular_coeff: 0.5,
+      exp: 7.0,
+      refl: 0.0,
+    },
+  }));
 
-  objects.push(scene::Sphere {
+  scene.objects.push(Box::new(Sphere {
     radius: 1.0,
-    center: geom::Vec3 { x: 1.0, y: 1.0, z: 4.0 },
-    color: Color { r: 255, g: 255, b: 0 },
-  });
+    center: Vec3::new(1.0, 1.0, 5.0),
+    material: Material {
+      color: Color::new(0.75, 1.0, 0.0),
+      diffuse_coeff: 0.7,
+      specular_coeff: 0.7,
+      exp: 5.0,
+      refl: 0.0,
+    },
+  }));
 
-  let mut file = File::create("hello.ppm")?;
-  file.write(b"P3\n")?;
-  file.write(format!("{} {}\n", &WIDTH, &HEIGHT).as_bytes())?;
-  file.write(b"255\n")?;
+  scene.objects.push(Box::new(Sphere {
+    radius: 1.0,
+    center: Vec3::new(0.0, 2.5, 6.0),
+    material: mat_mirror1,
+  }));
 
-  for i in 0..HEIGHT {
-    for j in 0..WIDTH {
-      let height_f = HEIGHT as f64;
-      let width_f = WIDTH as f64;
-      let y: f64 = (-(i as f64) + height_f / 2.0) / height_f;
-      let x: f64 = (j as f64 - width_f / 2.0) / width_f;
-      let ray = (geom::Vec3 { x, y, z: 1.0 }).norm();
-      mat[i][j] = cast_ray(origin, ray, &objects);
-      file.write(format!("{}\t", mat[i][j]).as_bytes())?;
-    }
-    file.write(b"\n")?;
-  }
+  scene.objects.push(Box::new(Sphere {
+    radius: 0.6,
+    center: Vec3::new(-1.5, 2.0, 4.0),
+    material: mat_mirror2,
+  }));
+
+  scene.objects.push(Box::new(Sphere {
+    radius: 20.0,
+    center: Vec3::new(1.0, -20.0, 10.0),
+    material: mat_diffuse1,
+  }));
+
+  let mut obj = ObjBuilder::default()
+    .from_obj_file("assets/teapot.obj")
+    .translation(Vec3::new(1.0, -0.2, 4.0))
+    .scale(Vec3::new(0.4, 0.4, 0.4))
+    .material(mat_diffuse2)
+    .build()
+    .unwrap();
+
+  obj.update_bbox();
+  obj.compute_normals();
+
+  scene.objects.push(Box::new(obj));
+
+  scene.lights.push(Light::PointLight(PointLight {
+    intensity: 1.0,
+    pos: Vec3::new(0.0, 8.0, 4.0),
+  }));
+
+  scene.lights.push(Light::DirectionalLight(DirectionalLight {
+    intensity: 0.5,
+    dir: Vec3::new(-2.0, 0.0, 1.0),
+  }));
+
+  scene.lights.push(Light::AmbientLight(AmbientLight { intensity: 0.2 }));
+
+  // Render to image
+  scene.render_to_ppm("image.ppm")?;
 
   Ok(())
 }
