@@ -2,7 +2,7 @@
 
 ---
 
-![Rust](https://github.com/AnuarTB/lumen/workflows/Rust/badge.svg?branch=master)
+![Rust](https://github.com/AnuarTB/rusty-raytracer/workflows/Rust/badge.svg)
 
 This repo is just an experimental project that I have been doing, in order to learn Rust.
 
